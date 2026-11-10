@@ -1,5 +1,6 @@
 import asyncio
 import json
+from dataclasses import asdict
 from abc import ABC, abstractmethod
 from typing import Any
 from ..communication import MessageBus
@@ -65,7 +66,7 @@ class BaseAgent(ABC):
         if incoming:
             refine_prompt = json.dumps({"phase": "cross_agent_integration", "global_question": task.global_question,
                 "your_initial_summary": data.get("summary", ""),
-                "your_initial_findings": [f.__dict__ for f in findings],
+                "your_initial_findings": [asdict(f) for f in findings],
                 "peer_contributions": [{"sender": m.sender_agent_id, "content": m.content,
                     "finding_id": m.related_claim_or_finding_id} for m in incoming],
                 "instruction": "Use relevant complementary findings without abandoning your specialty. Preserve attribution and disagreement. Return the same JSON schema."}, ensure_ascii=False)
