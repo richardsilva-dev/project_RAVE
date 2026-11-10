@@ -3,11 +3,16 @@ from collections import defaultdict
 from .contracts import AgentMessage, new_id
 
 class MessageBus:
-    """In-memory direct messaging with an auditable event log."""
-    def __init__(self, run_id: str):
+    """In-memory direct messaging with a publication barrier and audit log."""
+    def __init__(self, run_id: str, expected_publishers: int = 3):
         self.run_id = run_id
         self._inboxes = defaultdict(asyncio.Queue)
         self.audit_log: list[AgentMessage] = []
+        self.expected_publishers = expected_publishers
+        self._published = 0
+        self._all_published = asyncio.Event()
+        if expected_publishers == 0:
+            self._all_published.set()
 
     async def send(self, sender: str, recipient: str, message_type: str, task_id: str,
                    content: str, finding_id: str | None = None) -> AgentMessage:
@@ -16,6 +21,14 @@ class MessageBus:
         self.audit_log.append(message)
         await self._inboxes[recipient].put(message)
         return message
+
+    async def mark_published(self) -> None:
+        self._published += 1
+        if self._published >= self.expected_publishers:
+            self._all_published.set()
+
+    async def wait_for_all_publishers(self) -> None:
+        await self._all_published.wait()
 
     async def receive_all(self, agent_id: str) -> list[AgentMessage]:
         inbox = self._inboxes[agent_id]
