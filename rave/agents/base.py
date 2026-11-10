@@ -1,3 +1,4 @@
+import asyncio
 import json
 from abc import ABC, abstractmethod
 from typing import Any
@@ -45,26 +46,30 @@ class BaseAgent(ABC):
             "evidence": [{"source_title": "string", "source_url": "string", "supporting_excerpt_or_location": "string"}],
             "limitations": ["string"], "open_questions": ["string"]}],
             "limitations": ["string"], "open_questions": ["string"]}
-        initial = self.client.complete(self.instructions(), json.dumps({"phase": "independent_investigation",
-            "global_question": task.global_question, "specialized_question": task.specialized_question,
-            "scope": task.scope, "expected_contribution": task.expected_contribution,
-            "constraints": task.constraints, "required_json": schema}, ensure_ascii=False))
+        prompt = json.dumps({"phase": "independent_investigation", "global_question": task.global_question,
+            "specialized_question": task.specialized_question, "scope": task.scope,
+            "expected_contribution": task.expected_contribution, "constraints": task.constraints,
+            "required_json": schema}, ensure_ascii=False)
+        initial = await asyncio.to_thread(self.client.complete, self.instructions(), prompt)
         data = self.parse_json(initial.content)
         findings = self.make_findings(data, task)
         for finding in findings:
             for peer in self.peer_ids():
                 await self.bus.send(self.agent_id, peer, "FINDING_SHARE", task.task_id,
                     f"{finding.title}: {finding.claim}", finding.finding_id)
+        await self.bus.mark_published()
+        await self.bus.wait_for_all_publishers()
         incoming = await self.bus.receive_all(self.agent_id)
         usage = dict(initial.usage)
         raw = initial.content
         if incoming:
-            refinement = self.client.complete(self.instructions(), json.dumps({"phase": "cross_agent_integration",
-                "global_question": task.global_question, "your_initial_summary": data.get("summary", ""),
+            refine_prompt = json.dumps({"phase": "cross_agent_integration", "global_question": task.global_question,
+                "your_initial_summary": data.get("summary", ""),
                 "your_initial_findings": [f.__dict__ for f in findings],
                 "peer_contributions": [{"sender": m.sender_agent_id, "content": m.content,
                     "finding_id": m.related_claim_or_finding_id} for m in incoming],
-                "instruction": "Use relevant complementary findings without abandoning your specialty. Preserve attribution and disagreement. Return the same JSON schema."}, ensure_ascii=False))
+                "instruction": "Use relevant complementary findings without abandoning your specialty. Preserve attribution and disagreement. Return the same JSON schema."}, ensure_ascii=False)
+            refinement = await asyncio.to_thread(self.client.complete, self.instructions(), refine_prompt)
             data = self.parse_json(refinement.content)
             findings = self.make_findings(data, task)
             for key in ("prompt_tokens", "completion_tokens"):
