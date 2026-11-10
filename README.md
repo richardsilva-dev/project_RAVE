@@ -2,20 +2,38 @@
 
 Protótipo experimental de inteligência coletiva com três agentes especializados, coordenação híbrida e comparação com um agente individual.
 
-> Status: implementação inicial em andamento. Consulte `docs/` para a especificação e o protocolo. O software não presume superioridade da arquitetura coletiva.
+> Status: primeira implementação em construção e ainda não validada em execução real. A hipótese de superioridade da colmeia permanece aberta.
 
-## Escopo
+## Escopo implementado
 
 - Três agentes especializados: fundamentos e evidências; mecanismos e relações; perspectivas e limitações.
 - Hive Core com coordenação global e integração em camadas.
-- Comunicação direta e contextualizada entre agentes.
-- Baseline de agente único e registro de experimentos.
-- Testes automatizados sem necessidade de chave de API.
+- Comunicação direta entre agentes, com barreira de publicação e registro das mensagens.
+- Uma etapa de integração cruzada após a investigação inicial.
+- Baseline de agente único e persistência JSON dos resultados.
+- Testes automatizados dos contratos iniciais e da comunicação.
 
-## Requisitos
+## Requisitos e instalação
 
-Python 3.11 ou superior. Para execução com modelo real, configure as variáveis de ambiente descritas em `.env.example`.
+Python 3.11 ou superior.
 
-## Estado
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+pip install -e .[dev]
+cp .env.example .env
+```
 
-Repositório inicializado. Componentes serão implementados e validados em commits incrementais.
+Preencha `RAVE_API_KEY` no arquivo `.env`. O aplicativo carrega esse arquivo ao iniciar. O endpoint, o modelo e os limites também podem ser alterados nele.
+
+## Execução
+
+```bash
+rave single "Pergunta a investigar"
+rave hive "Pergunta a investigar"
+pytest
+```
+
+Os resultados são salvos como JSON em `data/runs/`. O cliente usa endpoint compatível com OpenAI Chat Completions. Nesta versão não há navegador ou pesquisa web integrada; o modelo deve declarar limitações quando não dispõe de fontes. Verifique fontes e referências antes de pontuar os resultados.
+
+Consulte `docs/ARCHITECTURE.md` e `docs/EXPERIMENT.md` antes de interpretar os outputs.
