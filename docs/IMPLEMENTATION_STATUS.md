@@ -7,7 +7,7 @@
 - Classe-base comum para os três agentes.
 - Três especializações fixas: fundamentos/evidências; mecanismos/relações; perspectivas/limitações.
 - MessageBus em memória com mensagens diretas, auditoria e barreira de publicação para sincronizar a troca inicial.
-- Execução paralela das investigações, seguida de uma etapa de integração cruzada.
+- Execução paralela das investigações, com pesquisa web via Responses API, seguida de uma etapa de integração cruzada.
 - Hive Core com planejamento, integração de contribuições e síntese final.
 - Baseline de agente único.
 - Persistência local de resultados em JSON.
@@ -16,7 +16,7 @@
 
 ## Ainda não implementado
 
-- Pesquisa web/navegação e coleta independente de fontes. O cliente LLM atual apenas chama um endpoint Chat Completions; portanto, não se deve interpretar o protótipo como pesquisador web autônomo.
+
 - Rubrica de avaliação automática, mapa de referência, pontuação ou comparação estatística.
 - Contabilidade financeira automática de custos; tokens reportados pelo provedor são registrados.
 - Reinvestigação direcionada pelo Hive Core.
@@ -30,6 +30,6 @@ Os arquivos e o workflow de testes foram adicionados ao GitHub. A execução loc
 
 1. Executar `pip install -e ".[dev]"` e `pytest -q` em ambiente Python 3.11+.
 2. Corrigir qualquer falha de instalação ou teste observada.
-3. Integrar uma ferramenta de busca com orçamento equivalente para agente único e colmeia.
+3. Confirmar acesso ao modelo de pesquisa configurado e comparar o orçamento de busca entre agente único e colmeia.
 4. Executar um caso pequeno de ponta a ponta e inspecionar mensagens, descobertas, síntese e metadados.
 5. Só então preparar a primeira bateria comparativa.

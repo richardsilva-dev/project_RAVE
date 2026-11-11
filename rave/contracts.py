@@ -56,6 +56,7 @@ class AgentResult:
     messages_used: list[str] = field(default_factory=list)
     raw_response: str = ""
     usage: dict[str, int] = field(default_factory=dict)
+    web_sources: list[Evidence] = field(default_factory=list)
 
 @dataclass
 class AgentMessage:

@@ -17,8 +17,12 @@ O Hive Core formaliza a pergunta, cria três tarefas fixas, acompanha a execuç�
 
 ## Limites
 
-Esta versão não implementa navegação web, validação semântica da verdade, detecção de desinformação, propagação deliberada de erros, memória entre execuções, criação dinâmica de agentes ou infraestrutura distribuída. O cliente LLM não é, por si só, um navegador: fontes e referências precisam ser fornecidas por ferramentas externas ou pelo modelo e devem ser verificadas antes da avaliação.
+Esta versão implementa pesquisa web hospedada via Responses API, mas não implementa validação semântica da verdade, detecção de desinformação, memória entre execuções, criação dinâmica de agentes ou infraestrutura distribuída. As fontes retornadas devem ser verificadas para confirmar que sustentam as afirmações.
 
 ## Provider
 
 O cliente usa endpoint compatível com OpenAI Chat Completions. Configure endpoint, modelo e chave por variáveis de ambiente. Nenhuma chave deve ser commitada.
+
+## Pesquisa externa
+
+As etapas iniciais dos agentes usam a ferramenta hospedada web_search da Responses API, com pesquisa obrigatória, e armazenam títulos e URLs retornados no resultado do agente. O Hive Core agrega fontes por URL e envia o catálogo para a síntese. Isso não valida semanticamente se cada fonte sustenta cada afirmação; essa revisão continua necessária. A pesquisa pode ser desativada com RAVE_WEB_SEARCH=false e exige o endpoint oficial OpenAI.

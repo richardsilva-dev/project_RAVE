@@ -30,7 +30,7 @@ class HiveCore:
         duration = time.perf_counter() - started
         metadata = RunMetadata(run_id, question, "RAVE", self.client.settings.model,
             started_wall, datetime.now(timezone.utc).isoformat(), duration,
-            4 + sum(1 for result in results if result.messages_used),
+            1 + len(results) + sum(1 for result in results if result.messages_used),
             sum(r.usage.get("prompt_tokens", 0) for r in results) + synthesis_usage.get("prompt_tokens", 0),
             sum(r.usage.get("completion_tokens", 0) for r in results) + synthesis_usage.get("completion_tokens", 0),
             len(bus.audit_log))

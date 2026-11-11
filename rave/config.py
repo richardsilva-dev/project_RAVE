@@ -23,6 +23,8 @@ class Settings:
     temperature: float = 0.2
     timeout_seconds: int = 90
     output_dir: str = "data/runs"
+    web_search_enabled: bool = True
+    web_search_model: str = "gpt-6-astra"
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -40,6 +42,16 @@ class Settings:
             raise ValueError("RAVE_BASE_URL must not contain a query string or fragment")
         model = os.getenv("RAVE_MODEL", "gpt-4.1-mini").strip()
         output_dir = os.getenv("RAVE_OUTPUT_DIR", "data/runs").strip()
+        web_search_text = os.getenv("RAVE_WEB_SEARCH", "true").strip().lower()
+        if web_search_text not in {"true", "false", "1", "0", "yes", "no"}:
+            raise ValueError("RAVE_WEB_SEARCH must be true or false")
+        web_search_enabled = web_search_text in {"true", "1", "yes"}
+        web_search_model = os.getenv("RAVE_WEB_SEARCH_MODEL", "gpt-6-astra").strip()
         if not model or not output_dir or not 0 <= temperature <= 2 or timeout <= 0:
             raise ValueError("Model and output directory are required; temperature must be 0..2 and timeout positive")
-        return cls(os.getenv("RAVE_API_KEY", "").strip(), base_url, model, temperature, timeout, output_dir)
+        if web_search_enabled and not web_search_model:
+            raise ValueError("RAVE_WEB_SEARCH_MODEL is required when web search is enabled")
+        if web_search_enabled and parsed.hostname != "api.openai.com":
+            raise ValueError("Built-in web search requires RAVE_BASE_URL=https://api.openai.com/v1; disable it for compatible providers")
+        return cls(os.getenv("RAVE_API_KEY", "").strip(), base_url, model, temperature, timeout,
+            output_dir, web_search_enabled, web_search_model)
