@@ -32,9 +32,17 @@ class BaseAgent(ABC):
 
     def make_findings(self, data: dict[str, Any], task: AgentTask) -> list[Finding]:
         findings = []
-        for item in data.get("findings", []):
-            evidence = [Evidence(e.get("source_title", ""), e.get("source_url", ""),
-                e.get("supporting_excerpt_or_location", "")) for e in item.get("evidence", [])]
+        raw_findings = data.get("findings", [])
+        if not isinstance(raw_findings, list):
+            raise ValueError(f"{self.agent_id} returned findings in an invalid format")
+        for item in raw_findings:
+            if not isinstance(item, dict):
+                raise ValueError(f"{self.agent_id} returned a malformed finding")
+            raw_evidence = item.get("evidence", [])
+            if not isinstance(raw_evidence, list) or any(not isinstance(e, dict) for e in raw_evidence):
+                raise ValueError(f"{self.agent_id} returned malformed evidence")
+            evidence = [Evidence(str(e.get("source_title", "")), str(e.get("source_url", "")),
+                str(e.get("supporting_excerpt_or_location", ""))) for e in raw_evidence]
             findings.append(Finding(new_id("finding"), task.run_id, self.agent_id, task.task_id,
                 item.get("category", "other"), item.get("title", ""), item.get("claim", ""),
                 item.get("explanation", ""), evidence, [], [], list(item.get("limitations", [])),
@@ -51,8 +59,15 @@ class BaseAgent(ABC):
             "specialized_question": task.specialized_question, "scope": task.scope,
             "expected_contribution": task.expected_contribution, "constraints": task.constraints,
             "required_json": schema}, ensure_ascii=False)
-        initial = await asyncio.to_thread(self.client.complete, self.instructions(), prompt)
-        data = self.parse_json(initial.content)
+        try:
+            initial = await asyncio.to_thread(self.client.complete, self.instructions(), prompt)
+            data = self.parse_json(initial.content)
+            if not isinstance(data, dict):
+                raise ValueError(f"{self.agent_id} returned JSON that is not an object")
+        except Exception:
+            # Always release peers waiting at the publication barrier on failure.
+            await self.bus.mark_published()
+            raise
         findings = self.make_findings(data, task)
         for finding in findings:
             for peer in self.peer_ids():

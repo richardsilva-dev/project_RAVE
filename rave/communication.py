@@ -5,6 +5,8 @@ from .contracts import AgentMessage, new_id
 class MessageBus:
     """In-memory direct messaging with a publication barrier and audit log."""
     def __init__(self, run_id: str, expected_publishers: int = 3):
+        if expected_publishers < 0:
+            raise ValueError("expected_publishers cannot be negative")
         self.run_id = run_id
         self._inboxes = defaultdict(asyncio.Queue)
         self.audit_log: list[AgentMessage] = []
@@ -23,6 +25,8 @@ class MessageBus:
         return message
 
     async def mark_published(self) -> None:
+        if self._published >= self.expected_publishers:
+            raise RuntimeError("More agents published than expected")
         self._published += 1
         if self._published >= self.expected_publishers:
             self._all_published.set()

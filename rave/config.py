@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import os
 from pathlib import Path
+from urllib.parse import urlsplit
 
 def _load_dotenv(path: str = ".env") -> None:
     """Load simple KEY=VALUE lines without overriding existing environment values."""
@@ -26,9 +27,19 @@ class Settings:
     @classmethod
     def from_env(cls) -> "Settings":
         _load_dotenv()
-        return cls(api_key=os.getenv("RAVE_API_KEY", ""),
-            base_url=os.getenv("RAVE_BASE_URL", "https://api.openai.com/v1").rstrip("/"),
-            model=os.getenv("RAVE_MODEL", "gpt-4.1-mini"),
-            temperature=float(os.getenv("RAVE_TEMPERATURE", "0.2")),
-            timeout_seconds=int(os.getenv("RAVE_TIMEOUT_SECONDS", "90")),
-            output_dir=os.getenv("RAVE_OUTPUT_DIR", "data/runs"))
+        try:
+            temperature = float(os.getenv("RAVE_TEMPERATURE", "0.2"))
+            timeout = int(os.getenv("RAVE_TIMEOUT_SECONDS", "90"))
+        except ValueError as exc:
+            raise ValueError("RAVE_TEMPERATURE must be numeric and RAVE_TIMEOUT_SECONDS an integer") from exc
+        base_url = os.getenv("RAVE_BASE_URL", "https://api.openai.com/v1").strip().rstrip("/")
+        parsed = urlsplit(base_url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.username or parsed.password:
+            raise ValueError("RAVE_BASE_URL must be an absolute HTTP(S) URL without embedded credentials")
+        if parsed.query or parsed.fragment:
+            raise ValueError("RAVE_BASE_URL must not contain a query string or fragment")
+        model = os.getenv("RAVE_MODEL", "gpt-4.1-mini").strip()
+        output_dir = os.getenv("RAVE_OUTPUT_DIR", "data/runs").strip()
+        if not model or not output_dir or not 0 <= temperature <= 2 or timeout <= 0:
+            raise ValueError("Model and output directory are required; temperature must be 0..2 and timeout positive")
+        return cls(os.getenv("RAVE_API_KEY", "").strip(), base_url, model, temperature, timeout, output_dir)
