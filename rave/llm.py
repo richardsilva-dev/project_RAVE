@@ -1,7 +1,11 @@
 import json
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from email.utils import parsedate_to_datetime
+from datetime import datetime, timezone
+from threading import BoundedSemaphore
 from typing import Any
 from .config import Settings
 
@@ -15,6 +19,7 @@ class ChatCompletionsClient:
     """Minimal OpenAI-compatible client using Python standard library."""
     def __init__(self, settings: Settings):
         self.settings = settings
+        self._request_semaphore = BoundedSemaphore(settings.max_concurrent_requests)
 
     def complete(self, system: str, user: str, *, web_search: bool = False) -> LLMResponse:
         if not self.settings.api_key:
@@ -36,14 +41,34 @@ class ChatCompletionsClient:
             data=json.dumps(payload).encode("utf-8"),
             headers={"Authorization": f"Bearer {self.settings.api_key}", "Content-Type": "application/json"},
             method="POST")
-        try:
-            with urllib.request.urlopen(request, timeout=self.settings.timeout_seconds) as response:
-                body: dict[str, Any] = json.loads(response.read().decode("utf-8"))
-        except urllib.error.HTTPError as exc:
-            # Provider error bodies can echo credentials or submitted prompts.
-            raise RuntimeError(f"LLM provider returned HTTP {exc.code}") from exc
-        except urllib.error.URLError as exc:
-            raise RuntimeError(f"Could not reach LLM provider: {exc.reason}") from exc
+        for attempt in range(3):
+            try:
+                with self._request_semaphore:
+                    with urllib.request.urlopen(request, timeout=self.settings.timeout_seconds) as response:
+                        body: dict[str, Any] = json.loads(response.read().decode("utf-8"))
+                break
+            except urllib.error.HTTPError as exc:
+                error_code, error_type = self._safe_error_fields(exc)
+                retry_after = self._retry_after_seconds(exc.headers.get("Retry-After"))
+                transient_rate_limit = exc.code == 429 and (
+                    error_code in {"rate_limit_exceeded", "slow_down"} or error_type == "rate_limit_error"
+                )
+                if transient_rate_limit and attempt < 2:
+                    delay = retry_after if retry_after is not None else 2 ** attempt
+                    if delay <= 30:
+                        time.sleep(delay)
+                        continue
+                details = []
+                if error_code:
+                    details.append(f"code={error_code}")
+                if error_type:
+                    details.append(f"type={error_type}")
+                if retry_after is not None:
+                    details.append(f"retry_after={retry_after:g}s")
+                suffix = f" ({', '.join(details)})" if details else ""
+                raise RuntimeError(f"LLM provider returned HTTP {exc.code}{suffix}") from exc
+            except urllib.error.URLError as exc:
+                raise RuntimeError(f"Could not reach LLM provider: {exc.reason}") from exc
         citations: list[dict[str, str]] = []
         if web_search:
             chunks = []
@@ -86,3 +111,35 @@ class ChatCompletionsClient:
             raise RuntimeError("LLM provider returned invalid usage metadata") from exc
         unique_citations = list({citation["url"]: citation for citation in citations}.values())
         return LLMResponse(content, tokens, unique_citations)
+
+    @staticmethod
+    def _safe_error_fields(exc: urllib.error.HTTPError) -> tuple[str, str]:
+        """Expose only provider error codes/types, never echoed messages or prompts."""
+        try:
+            payload = json.loads(exc.read(64_000).decode("utf-8", errors="replace"))
+            error = payload.get("error", {}) if isinstance(payload, dict) else {}
+            if not isinstance(error, dict):
+                return "", ""
+            code = error.get("code")
+            error_type = error.get("type")
+            code = code if isinstance(code, str) and code.replace("_", "").replace("-", "").isalnum() else ""
+            error_type = error_type if isinstance(error_type, str) and error_type.replace("_", "").replace("-", "").isalnum() else ""
+            return code[:80], error_type[:80]
+        except (AttributeError, OSError, ValueError, TypeError):
+            return "", ""
+
+    @staticmethod
+    def _retry_after_seconds(value: str | None) -> float | None:
+        if not value:
+            return None
+        try:
+            seconds = float(value)
+        except ValueError:
+            try:
+                retry_at = parsedate_to_datetime(value)
+                if retry_at.tzinfo is None:
+                    retry_at = retry_at.replace(tzinfo=timezone.utc)
+                seconds = (retry_at - datetime.now(timezone.utc)).total_seconds()
+            except (TypeError, ValueError, OverflowError):
+                return None
+        return max(0.0, seconds)

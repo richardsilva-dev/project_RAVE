@@ -25,6 +25,7 @@ class Settings:
     output_dir: str = "data/runs"
     web_search_enabled: bool = True
     web_search_model: str = "gpt-6-astra"
+    max_concurrent_requests: int = 1
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -32,6 +33,7 @@ class Settings:
         try:
             temperature = float(os.getenv("RAVE_TEMPERATURE", "0.2"))
             timeout = int(os.getenv("RAVE_TIMEOUT_SECONDS", "90"))
+            max_concurrent = int(os.getenv("RAVE_MAX_CONCURRENT_REQUESTS", "1"))
         except ValueError as exc:
             raise ValueError("RAVE_TEMPERATURE must be numeric and RAVE_TIMEOUT_SECONDS an integer") from exc
         base_url = os.getenv("RAVE_BASE_URL", "https://api.openai.com/v1").strip().rstrip("/")
@@ -47,11 +49,11 @@ class Settings:
             raise ValueError("RAVE_WEB_SEARCH must be true or false")
         web_search_enabled = web_search_text in {"true", "1", "yes"}
         web_search_model = os.getenv("RAVE_WEB_SEARCH_MODEL", "gpt-6-astra").strip()
-        if not model or not output_dir or not 0 <= temperature <= 2 or timeout <= 0:
-            raise ValueError("Model and output directory are required; temperature must be 0..2 and timeout positive")
+        if not model or not output_dir or not 0 <= temperature <= 2 or timeout <= 0 or max_concurrent <= 0:
+            raise ValueError("Model and output directory are required; temperature must be 0..2 and request limits positive")
         if web_search_enabled and not web_search_model:
             raise ValueError("RAVE_WEB_SEARCH_MODEL is required when web search is enabled")
         if web_search_enabled and parsed.hostname != "api.openai.com":
             raise ValueError("Built-in web search requires RAVE_BASE_URL=https://api.openai.com/v1; disable it for compatible providers")
         return cls(os.getenv("RAVE_API_KEY", "").strip(), base_url, model, temperature, timeout,
-            output_dir, web_search_enabled, web_search_model)
+            output_dir, web_search_enabled, web_search_model, max_concurrent)

@@ -41,3 +41,7 @@ Consulte `docs/ARCHITECTURE.md` e `docs/EXPERIMENT.md` antes de interpretar os o
 ## Pesquisa web
 
 As investigações usam a pesquisa web hospedada pela OpenAI via Responses API. Por padrão, cada agente executa pesquisa e as fontes retornadas são guardadas nos resultados para auditoria. Isso gera chamadas e custos adicionais de API. Para desativar, defina RAVE_WEB_SEARCH=false no .env. A pesquisa requer RAVE_BASE_URL=https://api.openai.com/v1; endpoints compatíveis podem ser usados com pesquisa desativada. Confira se cada fonte sustenta a afirmação associada.
+
+## Limite de requisições
+
+`RAVE_MAX_CONCURRENT_REQUESTS` controla quantas chamadas à API podem ocorrer ao mesmo tempo. O padrão é `1` para reduzir rajadas que podem atingir limites do provedor; aumente somente se os limites do projeto permitirem.

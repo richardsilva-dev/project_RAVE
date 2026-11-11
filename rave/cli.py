@@ -25,12 +25,15 @@ def main() -> None:
         command.add_argument("question")
         command.add_argument("--scope", default="Investigar a pergunta sem expandir além do necessário.")
     args = parser.parse_args()
-    settings = Settings.from_env()
-    client = ChatCompletionsClient(settings)
-    if args.command == "hive":
-        output = asyncio.run(HiveCore(client, settings.output_dir).run(args.question, args.scope))
-    else:
-        output = asyncio.run(run_single(client, settings.output_dir, args.question, args.scope))
+    try:
+        settings = Settings.from_env()
+        client = ChatCompletionsClient(settings)
+        if args.command == "hive":
+            output = asyncio.run(HiveCore(client, settings.output_dir).run(args.question, args.scope))
+        else:
+            output = asyncio.run(run_single(client, settings.output_dir, args.question, args.scope))
+    except (RuntimeError, ValueError) as exc:
+        parser.exit(1, f"{parser.prog}: error: {exc}\n")
     print(json.dumps(output, ensure_ascii=False, indent=2, default=lambda value: value.__dict__))
 
 if __name__ == "__main__":

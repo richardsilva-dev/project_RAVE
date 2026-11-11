@@ -70,10 +70,15 @@ class BaseAgent(ABC):
             if not isinstance(data, dict):
                 raise ValueError(f"{self.agent_id} returned JSON that is not an object")
             findings = self.make_findings(data, task)
+            source_note = ""
+            if initial.citations:
+                sources = "; ".join(f"{source.get('title', 'Source')}: {source.get('url', '')}"
+                    for source in initial.citations[:5])
+                source_note = f"\nSources consulted by {self.agent_id}: {sources}"
             for finding in findings:
                 for peer in self.peer_ids():
                     await self.bus.send(self.agent_id, peer, "FINDING_SHARE", task.task_id,
-                        f"{finding.title}: {finding.claim}", finding.finding_id)
+                        f"{finding.title}: {finding.claim}{source_note}", finding.finding_id)
             await self.bus.mark_published()
             published = True
         except Exception:

@@ -1,4 +1,6 @@
+import io
 import json
+import urllib.error
 from unittest.mock import patch
 
 from rave.config import Settings
@@ -40,3 +42,37 @@ def test_responses_web_search_returns_text_sources_and_usage():
     assert response.content == "{\"findings\": []}"
     assert response.citations == [{"title": "Source", "url": "https://example.org/source"}]
     assert response.usage == {"prompt_tokens": 12, "completion_tokens": 6}
+
+
+def test_quota_error_exposes_safe_code_without_echoing_provider_message():
+    settings = Settings("test-key", "https://api.openai.com/v1", "chat-model")
+    client = ChatCompletionsClient(settings)
+    error_body = json.dumps({"error": {"type": "insufficient_quota", "code": "insufficient_quota",
+        "message": "private prompt and secret text"}}).encode("utf-8")
+    error = urllib.error.HTTPError("https://api.openai.com/v1/chat/completions", 429, "Too Many Requests",
+        {}, io.BytesIO(error_body))
+    with patch("rave.llm.urllib.request.urlopen", side_effect=error) as open_url:
+        try:
+            client.complete("system", "question")
+        except RuntimeError as exc:
+            assert "code=insufficient_quota" in str(exc)
+            assert "private prompt" not in str(exc)
+        else:
+            raise AssertionError("Expected quota error")
+    assert open_url.call_count == 1
+
+
+def test_transient_rate_limit_retries_then_completes():
+    settings = Settings("test-key", "https://api.openai.com/v1", "chat-model")
+    client = ChatCompletionsClient(settings)
+    limited_body = json.dumps({"error": {"type": "rate_limit_error", "code": "rate_limit_exceeded"}}).encode()
+    rate_limit = urllib.error.HTTPError("https://api.openai.com/v1/chat/completions", 429,
+        "Too Many Requests", {"Retry-After": "0"}, io.BytesIO(limited_body))
+    success = FakeHTTPResponse({"choices": [{"message": {"content": "ok"}}],
+        "usage": {"prompt_tokens": 1, "completion_tokens": 1}})
+    with patch("rave.llm.urllib.request.urlopen", side_effect=[rate_limit, success]) as open_url:
+        with patch("rave.llm.time.sleep") as sleep:
+            response = client.complete("system", "question")
+    assert response.content == "ok"
+    assert open_url.call_count == 2
+    sleep.assert_called_once_with(0.0)
