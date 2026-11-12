@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RAVE Benchmark Run Metadata",
+  "type": "object",
+  "required": ["run_id", "system_id", "commit_sha", "started_at", "status", "models", "calls", "token_usage", "duration_seconds"],
+  "properties": {
+    "run_id": {"type": "string"},
+    "system_id": {"type": "string"},
+    "commit_sha": {"type": ["string", "null"]},
+    "started_at": {"type": "string"},
+    "completed_at": {"type": ["string", "null"]},
+    "status": {"enum": ["COMPLETED", "PARTIAL", "INVALID"]},
+    "failure_reason": {"type": ["string", "null"]},
+    "models": {"type": "object"},
+    "tools": {"type": "object"},
+    "calls": {"type": "array", "items": {"type": "object"}},
+    "token_usage": {"type": "object"},
+    "duration_seconds": {"type": "number", "minimum": 0},
+    "estimated_cost_usd": {"type": ["number", "null"], "minimum": 0}
+  },
+  "additionalProperties": true
+}
