@@ -43,6 +43,24 @@ class SoloResearchAgent:
         self.client = client
         self.settings = settings
 
+    def _invoke(self, budget: Budget, *, kind: str, model: str, system: str,
+                user: str, web_search: bool = False):
+        output_cap = budget.before_call(kind)
+        started = time.perf_counter()
+        try:
+            response, duration = self.client.complete(
+                model=model, system=system, user=user,
+                web_search=web_search, max_output_tokens=output_cap,
+            )
+        except Exception:
+            budget.record(kind=kind, model=model, usage={},
+                          duration_seconds=time.perf_counter() - started, status="FAILED")
+            raise
+        budget.record(kind=kind, model=model, usage=response.usage,
+                      duration_seconds=duration, citations_count=len(response.citations),
+                      request_attempts=response.attempts)
+        return response
+
     def run(self, question: str, scope: str) -> dict:
         run_id = f"solo-{uuid.uuid4().hex[:12]}"
         started_at = datetime.now(timezone.utc).isoformat()
