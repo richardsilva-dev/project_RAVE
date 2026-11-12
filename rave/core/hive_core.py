@@ -67,16 +67,20 @@ class HiveCore:
             len(integrated["findings"]), len(integrated["web_sources"]))
         synthesis_usage = {}
         synthesis_error = ""
+        synthesis_status = "NOT_RUN"
         if results:
             synthesis_started = time.perf_counter()
             try:
                 final_output, synthesis_usage = await synthesize(self.client, question, integrated)
+                synthesis_status = "COMPLETED"
             except Exception as exc:
                 synthesis_error = type(exc).__name__
+                synthesis_status = "FAILED"
                 execution_status = "PARTIAL"
                 final_output = {"executive_answer": "", "integrated_analysis": "", "collective_integration": "",
-                    "evidence_and_sources": integrated.get("web_sources", []),
-                    "gaps_and_limitations": ["A síntese final falhou; os resultados dos agentes foram preservados sem resposta coletiva."],
+                    "evidence_and_sources": [], "web_sources": integrated.get("web_sources", []),
+                    "gaps_and_limitations": [
+                        "A síntese final falhou ou retornou saída inválida. Os resultados dos agentes foram preservados, mas não existe resposta coletiva validada."],
                     "conclusions": ""}
             phase_timings["final_synthesis"] = time.perf_counter() - synthesis_started
             if failed_agents:
@@ -104,10 +108,11 @@ class HiveCore:
             "messages": bus.audit_log, "integration": integrated, "final_output": final_output,
             "phase_timings": phase_timings, "execution_status": execution_status,
             "failed_agents": failed_agents, "shared_research_error": shared_research_error,
-            "synthesis_error": synthesis_error}
+            "synthesis_error": synthesis_error, "synthesis_status": synthesis_status}
         path = save_run(self.output_dir, run_id, payload)
         logger.info("Run %s saved to %s in %.1fs", run_id, path, duration)
         return {"run_id": run_id, "result_path": str(path), "metadata": metadata,
             "agent_results": results, "final_output": final_output, "phase_timings": phase_timings,
             "execution_status": execution_status, "failed_agents": failed_agents,
-            "shared_research_error": shared_research_error, "synthesis_error": synthesis_error}
+            "shared_research_error": shared_research_error, "synthesis_error": synthesis_error,
+            "synthesis_status": synthesis_status}
