@@ -13,7 +13,7 @@ def test_rave_partial_status_is_not_promoted_to_completed():
         "metadata": {"status": "PARTIAL", "calls": []},
     })
     assert result["status"] == "PARTIAL"
-    assert result["metadata"]["synthesis_status"] is None
+    assert result["metadata"]["synthesis_status"] == "FAILED"
 
 
 def test_solo_preserves_provider_citation_provenance():
