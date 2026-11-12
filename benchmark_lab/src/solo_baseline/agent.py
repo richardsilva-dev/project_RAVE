@@ -156,6 +156,7 @@ class SoloResearchAgent:
                             raise ValueError("Final finding references a URL not returned by the search provider")
             except Exception as exc:
                 status, stop_reason = "PARTIAL", type(exc).__name__
+                final_output = {}
 
         if not final_output:
             status = "INVALID" if not notes else "PARTIAL"
