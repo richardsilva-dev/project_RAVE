@@ -35,14 +35,16 @@ class SingleAgent(BaseAgent):
         response = await asyncio.to_thread(self.client.complete, system,
             json.dumps(prompt_data, ensure_ascii=False), web_search=False)
         data, repair_usage, raw = await self.parse_json_with_repair(response.content, "single_baseline")
-        findings = self.make_findings(data, task)
+        citations = (shared_research.citations or []) if shared_research else []
+        provider_urls = {s.get("url", "").strip() for s in citations if s.get("url")}
+        findings = self.make_findings(data, task, provider_urls)
         usage = {key: response.usage.get(key, 0) + repair_usage.get(key, 0)
             + (shared_research.usage.get(key, 0) if shared_research else 0)
             for key in ("prompt_tokens", "completion_tokens")}
-        citations = shared_research.citations or [] if shared_research else []
         return AgentResult(self.agent_id, self.name, self.role, task.task_id, "COMPLETED",
             str(data.get("summary", "")), findings, list(data.get("limitations", [])),
             list(data.get("open_questions", [])), [], raw, usage,
-            [Evidence(source.get("title", ""), source.get("url", ""), "Source returned by shared web research")
+            [Evidence(source.get("title", ""), source.get("url", ""), "Citation returned by search tool",
+                citation_provenance="provider_returned")
                 for source in citations], {"total": time.perf_counter() - started},
             findings, [], [], "SINGLE_PASS")

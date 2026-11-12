@@ -17,9 +17,9 @@ O Hive Core planeja três tarefas fixas, acompanha os agentes, integra as contri
 
 `RAVE_RESEARCH_MODE=shared_research` é o padrão compatível com a arquitetura da `main`: o Hive Core faz uma busca web e entrega a mesma pesquisa aos três agentes, que analisam o conteúdo sob especialidades diferentes.
 
-Na branch experimental `independent_research`, `RAVE_RESEARCH_MODE=independent_research` faz cada agente conduzir sua própria busca especializada antes da troca de descobertas. Esse modo aumenta o número de pesquisas e pode gerar fontes diferentes. A comparação registrada em `docs/RELATORIO_COMPARACAO_SHARED_VS_INDEPENDENT_2026-11-12.docx` é exploratória e não determina superioridade.
+Na branch experimental `independent_research`, `RAVE_RESEARCH_MODE=independent_research` executa duas fases por agente: primeiro a busca especializada com `RAVE_WEB_SEARCH_MODEL`, depois a análise dos resultados com `RAVE_MODEL`. O modo compartilhado também usa `RAVE_MODEL` nas análises. Isso separa a estratégia de pesquisa da escolha do modelo de raciocínio; a quantidade de buscas continua diferente e deve ser medida como custo do tratamento.
 
-Ambos os modos usam `RAVE_WEB_SEARCH_MODEL` para busca e `RAVE_MODEL` para análise. As chamadas, modelos, finalidades, tokens, duração e tentativas ficam registradas por execução. Resultados de busca e conteúdo de páginas são dados não confiáveis; instruções embutidas não alteram as regras dos agentes.
+Ambos os modos usam `RAVE_WEB_SEARCH_MODEL` para busca e `RAVE_MODEL` para análise. `web_sources` registra URLs retornadas nas anotações da ferramenta. `model_reported_references` registra URLs presentes no JSON do agente que não correspondem a essas anotações. Nenhuma das categorias prova a verdade ou o suporte semântico da página. As chamadas, modelos, finalidades, tokens, duração e tentativas ficam registradas por execução. Resultados de busca e conteúdo de páginas são dados não confiáveis; instruções embutidas não alteram as regras dos agentes.
 
 ## Confiabilidade informacional
 

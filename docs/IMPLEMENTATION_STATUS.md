@@ -1,35 +1,31 @@
-# Estado da implementação — RAVE Hive Core
+﻿# Estado da implementação do RAVE
 
-Atualizado em 12/11/2026. Este documento separa o que foi observado em execuções anteriores do que está implementado no código atual. As alterações recentes de instrumentação e baseline ainda não foram executadas contra o provedor.
+Atualizado em 12/11/2026. Esta nota descreve o código nesta branch `independent_research` e as verificações executadas nesta revisão. A branch `main` não foi alterada.
 
-## Implementado no código atual
+## Implementado
 
-- Três agentes especializados e fixos, com comunicação direta, auditoria e barreira de publicação.
-- Pesquisa web compartilhada, análise especializada, integração entre pares e síntese final.
-- Evidência por afirmação, estados `SUPPORTED`, `REFUTED`, `INSUFFICIENT`, `CONFLICTING` e `OUTDATED`, preservação de origem e tratamento do conteúdo recuperado como dado não confiável.
-- Registro por chamada de modelo, finalidade, modelo, tokens de entrada/saída, duração e tentativas HTTP; totais da execução Hive incluem busca compartilhada, análises, reparos, refinamentos e síntese bem-sucedidos.
-- Preservação das descobertas iniciais, mensagens recebidas, achados descartados e mudanças de refinamento, com razões quando fornecidas pelo modelo.
-- Classificação do estado de execução como completa, parcial ou inválida. Uma execução parcial é salva explicitamente como `PARTIAL`, com falhas identificadas por agente; sem agentes concluídos, não é produzida uma síntese factual.
-- Baseline individual atualizado para usar a mesma consulta de pesquisa compartilhada, modelo de raciocínio configurado e contrato JSON com validação/reparo; chamadas e tokens também são registrados.
-- Validação estrutural dos campos e tipos dos resultados de agentes antes da integração, sem dependência adicional.
+- Mantém `shared_research` como modo padrão. A busca central é compartilhada pelos três agentes.
+- Adiciona `independent_research` em duas fases: cada agente faz uma busca especializada com `RAVE_WEB_SEARCH_MODEL`; depois, os três analisam com o mesmo `RAVE_MODEL` usado no modo compartilhado.
+- Mantém separadas as anotações de URLs retornadas pela ferramenta (`web_sources`) e URLs apenas escritas pelo modelo (`model_reported_references`). Ambas são referências para auditoria, não prova de confiabilidade ou suporte semântico.
+- Preserva estado selecionado em caso de falha de busca compartilhada e libera a barreira de publicação quando uma busca independente falha.
+- CI de push inclui `main` e `independent_research`; PRs seguem direcionados a `main`.
+- Adiciona testes para busca/análise em fases distintas, proveniência de citações, falha parcial e fluxo compartilhado.
 
-## Evidência de execução anterior
+## Verificação de código
 
-O relatório [RELATORIO_EXECUCAO_2026-11-11.md](RELATORIO_EXECUCAO_2026-11-11.md) registra 15 testes aprovados naquela revisão e uma execução real integrada válida, `rave-86b64f402cfd`, persistida em `data/runs/rave-86b64f402cfd.json`. Isso documenta o estado anterior à instrumentação atual; não é validação das mudanças listadas acima.
+`python -m pytest -q --tb=short`: 19 testes aprovados em 0,40 s nesta revisão.
 
-O experimento anterior concluiu com três agentes, 18 achados, 36 mensagens e 200,55 segundos. Não houve baseline individual pareado, mesma pergunta/fontes/condições, nem bateria comparativa. Portanto, não demonstra superioridade coletiva ou economia de recursos.
+As duas execuções reais v2 usaram a mesma pergunta e escopo, `gpt-5-search-api` para recuperação e `gpt-4.1-mini` para análise. A rodada compartilhada terminou `COMPLETED`; a independente terminou `PARTIAL` porque o agente 03 excedeu o tempo limite. Métricas e proveniência estão no relatório e em `data/comparisons/2026-11-12_shared_vs_independent_v2.json`. Os registros brutos em `data/runs/` não são versionados.
 
-## Limitações e validações pendentes
+## Limites
 
-- As alterações recentes ainda precisam de validação automatizada e de uma execução real.
-- A correção do registro por chamada só poderá ser confirmada com uma nova execução; a execução histórica não guardou duração/modelo/finalidade de cada chamada.
-- O baseline agora compartilha pesquisa, modelo de raciocínio e contrato, mas não existe ainda orçamento global de tokens rigorosamente igualado entre uma chamada individual e as várias chamadas Hive. Comparações de qualidade são mais controladas; comparações de eficiência ainda exigem protocolo de orçamento definido.
-- Não foram realizados Evaluation Lab, avaliação independente, agente externo de referência ou comparação estatística.
-- Estados de evidência são assistidos por modelo, não uma verificação semântica independente. Independência entre fontes e suporte real de trechos ainda precisam de auditoria.
+A rodada independente parcial não permite comparar qualidade final das estratégias. A execução completa compartilhada não teve avaliação humana cega pareada. Os rótulos de evidência, inclusive `SUPPORTED`, foram produzidos pelo modelo. Nenhuma afirmação ou fonte foi auditada manualmente nesta rodada. O total de URLs retornadas não mede independência editorial, confiabilidade nem se a página sustenta a afirmação.
 
-## Próximos passos
+Os tokens e a latência descrevem esta rodada e incluem fatores de reparo JSON e falhas; não estimam custo financeiro nem desempenho geral. Não houve orçamento global rigorosamente igualado, bateria com múltiplas perguntas ou avaliação estatística.
 
-1. Executar os testes automatizados e corrigir regressões.
-2. Fazer uma execução Hive e uma baseline com pergunta e escopo idênticos; inspecionar chamadas, tokens, duração, estados de execução e rastreabilidade.
-3. Definir orçamento global comparável e rubricar qualidade antes da bateria experimental.
-4. Planejar avaliações independentes e estatísticas para responder se a colmeia melhora a qualidade, acrescenta informação por cooperação e a que custo/latência.
+## Próximas etapas
+
+1. Repetir a execução independente até obter uma rodada completa, investigando o timeout do agente 03.
+2. Fazer comparações pareadas em várias perguntas e avaliações cegas com rubrica publicada antes das execuções.
+3. Auditar manualmente origem, conteúdo, atualidade e suporte de uma amostra de afirmações e referências.
+4. Definir e aplicar um orçamento de tokens/custo comparável antes de afirmar vantagem de eficiência.

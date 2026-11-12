@@ -43,7 +43,7 @@ Consulte `docs/ARCHITECTURE.md` e `docs/EXPERIMENT.md` antes de interpretar os o
 
 ## Pesquisa web
 
-O modo padrão `RAVE_RESEARCH_MODE=shared_research` faz uma pesquisa web pela OpenAI via Chat Completions e `gpt-5-search-api`; os três agentes analisam a base compartilhada. Na branch `independent_research`, use `RAVE_RESEARCH_MODE=independent_research` para que cada agente faça sua própria busca especializada. O modo e as fontes ficam registrados em cada execução. Para desativar a pesquisa, defina `RAVE_WEB_SEARCH=false`. A pesquisa requer `RAVE_BASE_URL=https://api.openai.com/v1`; confira se cada fonte sustenta a afirmação associada.
+O modo padrão `RAVE_RESEARCH_MODE=shared_research` faz uma pesquisa web pela OpenAI via Chat Completions e `gpt-5-search-api`; os três agentes analisam a base compartilhada com o modelo configurado em `RAVE_MODEL`. Na branch `independent_research`, `RAVE_RESEARCH_MODE=independent_research` faz primeiro uma busca especializada por agente com o modelo de pesquisa e depois uma análise separada com o mesmo `RAVE_MODEL` usado no modo compartilhado. As anotações de URL retornadas pela ferramenta ficam separadas das URLs apenas escritas no JSON do agente. O modo e as fontes ficam registrados em cada execução. Para desativar a pesquisa, defina `RAVE_WEB_SEARCH=false`. A pesquisa requer `RAVE_BASE_URL=https://api.openai.com/v1`; citações do provedor não provam que uma fonte é confiável ou sustenta a afirmação.
 
 ## Limite de requisições
 

@@ -19,6 +19,7 @@ class Evidence:
     updated_at: str = ""
     source_type: str = ""
     origin_finding_ids: list[str] = field(default_factory=list)
+    citation_provenance: str = "model_reported"
 
 @dataclass
 class Finding:
@@ -39,6 +40,7 @@ class Finding:
     status_rationale: str = ""
     origin_finding_ids: list[str] = field(default_factory=list)
     independent_source_count: int = 0
+    candidate_source_url_count: int = 0
 
 @dataclass
 class AgentTask:

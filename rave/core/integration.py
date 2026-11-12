@@ -11,30 +11,40 @@ def integrate(results: list[AgentResult]) -> dict:
         if normalized:
             by_claim[normalized].append(finding.agent_id)
     overlaps = [{"claim": claim, "agents": agents} for claim, agents in by_claim.items() if len(agents) > 1]
-    sources = {}
+    provider_sources = {}
+    model_references = {}
     for result in results:
         for source in result.web_sources:
             if source.source_url:
-                item = sources.setdefault(source.source_url, {"title": source.source_title, "url": source.source_url,
-                    "accessed_at": source.accessed_at, "agents": []})
+                item = provider_sources.setdefault(source.source_url, {"title": source.source_title,
+                    "url": source.source_url, "accessed_at": source.accessed_at,
+                    "citation_origin": "provider_tool_annotation", "agents": []})
                 if result.agent_id not in item["agents"]:
                     item["agents"].append(result.agent_id)
         for finding in result.findings:
             for evidence in finding.evidence:
                 if not evidence.source_url:
                     continue
-                item = sources.setdefault(evidence.source_url, {"title": evidence.source_title,
-                    "url": evidence.source_url, "accessed_at": evidence.accessed_at, "agents": []})
+                if evidence.citation_provenance == "provider_returned":
+                    continue
+                item = model_references.setdefault(evidence.source_url, {"title": evidence.source_title,
+                    "url": evidence.source_url, "reference_origin": "model_json",
+                    "agents": [], "finding_ids": [], "occurrences": 0})
                 if not item.get("title") and evidence.source_title:
                     item["title"] = evidence.source_title
                 if result.agent_id not in item["agents"]:
                     item["agents"].append(result.agent_id)
-    # Count distinct cited URLs as a reproducible upper-bound. Different URLs may
-    # still syndicate the same underlying report, so this is not proof of independence.
+                if finding.finding_id not in item["finding_ids"]:
+                    item["finding_ids"].append(finding.finding_id)
+                item["occurrences"] += 1
+    # This is a count of candidate URLs in model-produced evidence, not independent sources.
     for finding in findings:
         urls = {e.source_url.strip().rstrip("/").lower() for e in finding.evidence if e.source_url.strip()}
-        finding.independent_source_count = len(urls)
+        finding.candidate_source_url_count = len(urls)
+        finding.independent_source_count = 0  # deprecated: independence is not inferred from URL count
         finding.origin_finding_ids = list(dict.fromkeys(finding.origin_finding_ids + [finding.finding_id]))
     return {"local_contributions": local, "findings": findings, "overlaps": overlaps,
-        "web_sources": list(sources.values()), "agent_count": len(results),
-        "provenance_note": "Distinct URLs are only a candidate independence count; syndication or shared underlying evidence must be checked. Agent agreement alone does not verify a claim."}
+        "web_sources": list(provider_sources.values()), "model_reported_references": list(model_references.values()),
+        "provider_citation_count": len(provider_sources), "model_reported_reference_count": len(model_references),
+        "agent_count": len(results),
+        "provenance_note": "web_sources contains URLs returned by provider citation annotations; this does not verify truth or semantic support. model_reported_references contains URLs present in agent JSON but absent from those annotations. Distinct URLs are not proof of independent sources. Agent agreement does not verify a claim."}

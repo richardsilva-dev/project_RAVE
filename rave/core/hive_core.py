@@ -48,14 +48,17 @@ class HiveCore:
                 shared_research = await asyncio.to_thread(perform_shared_research, self.client, question, scope)
             except Exception as exc:
                 shared_research_error = type(exc).__name__
-                logger.warning("Run %s: shared search failed (%s); agents will use their regular research path",
+                logger.warning("Run %s: shared search failed (%s); preserving the selected shared mode",
                     run_id, shared_research_error)
             phase_timings["shared_web_research"] = time.perf_counter() - search_started
             logger.info("Run %s: shared research finished in %.1fs with %d sources", run_id,
                 phase_timings["shared_web_research"], len(shared_research.citations or []) if shared_research else 0)
         investigation_started = time.perf_counter()
-        outcomes = await asyncio.gather(*(agent.run(task, shared_research)
-            for agent, task in zip(agents, tasks)), return_exceptions=True)
+        if shared_research_error:
+            outcomes = [RuntimeError("SharedResearchUnavailable") for _ in agents]
+        else:
+            outcomes = await asyncio.gather(*(agent.run(task, shared_research)
+                for agent, task in zip(agents, tasks)), return_exceptions=True)
         results = [outcome for outcome in outcomes if not isinstance(outcome, BaseException)]
         failed_agents = [{"agent_id": agent.agent_id, "error_type": type(outcome).__name__}
             for agent, outcome in zip(agents, outcomes) if isinstance(outcome, BaseException)]
@@ -88,7 +91,7 @@ class HiveCore:
                     "Execução parcial: um ou mais agentes falharam. Esta saída não representa uma execução coletiva completa.")
             if shared_research_error:
                 final_output.setdefault("gaps_and_limitations", []).append(
-                    "A busca compartilhada falhou; os agentes usaram o fluxo de pesquisa individual.")
+                    "A busca compartilhada falhou; a execução foi preservada como modo compartilhado e os agentes não fizeram buscas individuais.")
         else:
             final_output = {"executive_answer": "", "integrated_analysis": "", "collective_integration": "",
                 "evidence_and_sources": [], "gaps_and_limitations": [

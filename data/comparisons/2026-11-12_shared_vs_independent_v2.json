@@ -1,0 +1,1659 @@
+{
+  "rave-af8d40e76f83": {
+    "run_id": "rave-af8d40e76f83",
+    "mode": "shared_research",
+    "execution_status": "COMPLETED",
+    "model_for_analysis": "gpt-4.1-mini",
+    "question": "Quais s?o os benef?cios, riscos e recomenda??es atuais para o uso de intelig?ncia artificial generativa na educa??o? Compare fontes institucionais e apresente limites e diverg?ncias.",
+    "scope": "Investigar a pergunta sem expandir al?m do necess?rio.",
+    "started_at": "2026-11-12T14:08:31.391916+00:00",
+    "completed_at": "2026-11-12T14:14:58.832848+00:00",
+    "duration_seconds": 387.44141520000085,
+    "total_calls": 11,
+    "prompt_tokens": 137698,
+    "completion_tokens": 49416,
+    "messages_count": 36,
+    "calls": [
+      {
+        "purpose": "shared_web_research",
+        "model": "gpt-5-search-api",
+        "status": "COMPLETED",
+        "prompt_tokens": 16818,
+        "completion_tokens": 2913,
+        "duration_seconds": 18.543770799999038,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "agent_initial_analysis",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 5713,
+        "completion_tokens": 4074,
+        "duration_seconds": 38.356770499998674,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "agent_initial_analysis",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 5702,
+        "completion_tokens": 3157,
+        "duration_seconds": 60.24063709999973,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "agent_initial_analysis",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 5714,
+        "completion_tokens": 2682,
+        "duration_seconds": 81.61549849999938,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "cross_agent_refinement",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 21415,
+        "completion_tokens": 3594,
+        "duration_seconds": 32.38536860000022,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "cross_agent_refinement",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 20500,
+        "completion_tokens": 8812,
+        "duration_seconds": 102.67641150000054,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "cross_agent_refinement",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 19896,
+        "completion_tokens": 9577,
+        "duration_seconds": 177.38186730000052,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "json_repair",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 4287,
+        "completion_tokens": 2286,
+        "duration_seconds": 163.9759234000012,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "json_repair",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 10058,
+        "completion_tokens": 3657,
+        "duration_seconds": 119.03179529999943,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "json_repair",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 10929,
+        "completion_tokens": 6376,
+        "duration_seconds": 90.80306720000044,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "final_synthesis",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 16666,
+        "completion_tokens": 2288,
+        "duration_seconds": 19.02306150000004,
+        "request_attempts": 1
+      }
+    ],
+    "phase_timings_seconds": {
+      "shared_web_research": 18.554813899998408,
+      "agent_research_and_peer_integration": 349.85857439999927,
+      "local_integration": 0.0005550000005314359,
+      "final_synthesis": 19.02587659999881
+    },
+    "failed_agents": [],
+    "agent_summaries": [
+      {
+        "agent_id": "agent-01",
+        "agent_name": "Fundamentos",
+        "status": "COMPLETED",
+        "initial_findings_count": 6,
+        "final_findings_count": 6,
+        "provider_citations": [
+          {
+            "source_title": "Guia para a IA generativa na educação e na pesquisa | UNESCO",
+            "source_url": "https://www.unesco.org/pt/articles/guia-para-ia-generativa-na-educacao-e-na-pesquisa?hub=752-8&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Guia de Boas Práticas de IA Generativa — Governo Digital",
+            "source_url": "https://www.gov.br/governodigital/pt-br/infraestrutura-nacional-de-dados/inteligencia-artificial-1/publicacoes/guia-ia-generativa?trk=article-ssr-frontend-pulse_little-text-block&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "GAIE : Report Structure and Main Doc",
+            "source_url": "https://teaching.cornell.edu/sites/default/files/2023-08/Cornell-GenerativeAIForEducation-Report_2.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "School of Education Guidelines for Generative AI",
+            "source_url": "https://kb.wisc.edu/merit/161266?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Recomendação n.º 4/2026, de 21 de maio | DR",
+            "source_url": "https://diariodarepublica.pt/dr/detalhe/recomendacao/4-2026-1124911989?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "# 3.1 Quais as oportunidades e os riscos do uso da IA no processo de ensino-aprendizagem?",
+            "source_url": "https://www.computacional.com.br/ia/publicacoes_relevantes/Atos_Normativos/MEC_-_IA_na_Educacao_Basica.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "SOBRE - Referencial para Desenvolvimento e Uso Responsáveis de Inteligência Artificial na Educação - Brasil Participativo",
+            "source_url": "https://brasilparticipativo.presidencia.gov.br/processes/referencialianaeducacao/f/1691/?locale=pt-BR&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "<visual_element id=\"e1\">",
+            "source_url": "https://cead.uesb.br/wp-content/uploads/2026/03/Guia-Desenvolvimento-e-uso-Responsavel-da-Inteligencia-Artificial-na-Educacao.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Governing generative AI in higher education: a global Delphi study on policy and practice",
+            "source_url": "https://link.springer.com/article/10.1186/s41239-026-00602-z?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Entre orientar e prescrever: a institucionalização da IA generativa em universidades públicas brasileiras",
+            "source_url": "https://revistas.uepg.br/index.php/praxiseducativa/pt_BR/article/view/26177?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Generative artificial intelligence (AI) in education - GOV.UK",
+            "source_url": "https://www.gov.uk/government/publications/generative-artificial-intelligence-in-education/generative-artificial-intelligence-ai-in-education?pStoreID=bizclubsilverb%2Fgb-en%2Fshop&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Guidance for generative AI in education and research - Africa Education Knowledge Platform",
+            "source_url": "https://www.iicba.unesco.org/en/africa-education-knowledge-platform/guidance-generative-ai-education-and-research?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Generative AI in Higher Education: Seeing ChatGPT Through Universities' Policies, Resources, and Guidelines",
+            "source_url": "https://arxiv.org/abs/2312.05235?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          }
+        ],
+        "phase_timings_seconds": {
+          "search": 0.0,
+          "analysis": 38.35908969999946,
+          "publication_barrier_wait": 43.27403720000075,
+          "cross_agent_refinement": 102.68094609999935,
+          "total": 303.36352799999986
+        },
+        "refinement_status": "COMPLETED"
+      },
+      {
+        "agent_id": "agent-02",
+        "agent_name": "Mecanismos",
+        "status": "COMPLETED",
+        "initial_findings_count": 7,
+        "final_findings_count": 13,
+        "provider_citations": [
+          {
+            "source_title": "Guia para a IA generativa na educação e na pesquisa | UNESCO",
+            "source_url": "https://www.unesco.org/pt/articles/guia-para-ia-generativa-na-educacao-e-na-pesquisa?hub=752-8&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:14:39.805144+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Guia de Boas Práticas de IA Generativa — Governo Digital",
+            "source_url": "https://www.gov.br/governodigital/pt-br/infraestrutura-nacional-de-dados/inteligencia-artificial-1/publicacoes/guia-ia-generativa?trk=article-ssr-frontend-pulse_little-text-block&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:14:39.805144+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "GAIE : Report Structure and Main Doc",
+            "source_url": "https://teaching.cornell.edu/sites/default/files/2023-08/Cornell-GenerativeAIForEducation-Report_2.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:14:39.805144+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "School of Education Guidelines for Generative AI",
+            "source_url": "https://kb.wisc.edu/merit/161266?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:14:39.805144+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Recomendação n.º 4/2026, de 21 de maio | DR",
+            "source_url": "https://diariodarepublica.pt/dr/detalhe/recomendacao/4-2026-1124911989?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:14:39.805144+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "# 3.1 Quais as oportunidades e os riscos do uso da IA no processo de ensino-aprendizagem?",
+            "source_url": "https://www.computacional.com.br/ia/publicacoes_relevantes/Atos_Normativos/MEC_-_IA_na_Educacao_Basica.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:14:39.805144+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "SOBRE - Referencial para Desenvolvimento e Uso Responsáveis de Inteligência Artificial na Educação - Brasil Participativo",
+            "source_url": "https://brasilparticipativo.presidencia.gov.br/processes/referencialianaeducacao/f/1691/?locale=pt-BR&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:14:39.805144+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "<visual_element id=\"e1\">",
+            "source_url": "https://cead.uesb.br/wp-content/uploads/2026/03/Guia-Desenvolvimento-e-uso-Responsavel-da-Inteligencia-Artificial-na-Educacao.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:14:39.805144+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Governing generative AI in higher education: a global Delphi study on policy and practice",
+            "source_url": "https://link.springer.com/article/10.1186/s41239-026-00602-z?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:14:39.805144+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Entre orientar e prescrever: a institucionalização da IA generativa em universidades públicas brasileiras",
+            "source_url": "https://revistas.uepg.br/index.php/praxiseducativa/pt_BR/article/view/26177?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:14:39.805144+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Generative artificial intelligence (AI) in education - GOV.UK",
+            "source_url": "https://www.gov.uk/government/publications/generative-artificial-intelligence-in-education/generative-artificial-intelligence-ai-in-education?pStoreID=bizclubsilverb%2Fgb-en%2Fshop&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:14:39.805144+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Guidance for generative AI in education and research - Africa Education Knowledge Platform",
+            "source_url": "https://www.iicba.unesco.org/en/africa-education-knowledge-platform/guidance-generative-ai-education-and-research?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:14:39.805144+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Generative AI in Higher Education: Seeing ChatGPT Through Universities' Policies, Resources, and Guidelines",
+            "source_url": "https://arxiv.org/abs/2312.05235?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:14:39.805144+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          }
+        ],
+        "phase_timings_seconds": {
+          "search": 0.0,
+          "analysis": 60.2423359000004,
+          "publication_barrier_wait": 21.392336599999908,
+          "cross_agent_refinement": 177.38558770000054,
+          "total": 349.8563316
+        },
+        "refinement_status": "COMPLETED"
+      },
+      {
+        "agent_id": "agent-03",
+        "agent_name": "Perspectivas",
+        "status": "COMPLETED",
+        "initial_findings_count": 5,
+        "final_findings_count": 5,
+        "provider_citations": [
+          {
+            "source_title": "Guia para a IA generativa na educação e na pesquisa | UNESCO",
+            "source_url": "https://www.unesco.org/pt/articles/guia-para-ia-generativa-na-educacao-e-na-pesquisa?hub=752-8&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:27.967104+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Guia de Boas Práticas de IA Generativa — Governo Digital",
+            "source_url": "https://www.gov.br/governodigital/pt-br/infraestrutura-nacional-de-dados/inteligencia-artificial-1/publicacoes/guia-ia-generativa?trk=article-ssr-frontend-pulse_little-text-block&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:27.967104+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "GAIE : Report Structure and Main Doc",
+            "source_url": "https://teaching.cornell.edu/sites/default/files/2023-08/Cornell-GenerativeAIForEducation-Report_2.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:27.967104+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "School of Education Guidelines for Generative AI",
+            "source_url": "https://kb.wisc.edu/merit/161266?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:27.967104+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Recomendação n.º 4/2026, de 21 de maio | DR",
+            "source_url": "https://diariodarepublica.pt/dr/detalhe/recomendacao/4-2026-1124911989?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:27.967104+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "# 3.1 Quais as oportunidades e os riscos do uso da IA no processo de ensino-aprendizagem?",
+            "source_url": "https://www.computacional.com.br/ia/publicacoes_relevantes/Atos_Normativos/MEC_-_IA_na_Educacao_Basica.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:27.967104+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "SOBRE - Referencial para Desenvolvimento e Uso Responsáveis de Inteligência Artificial na Educação - Brasil Participativo",
+            "source_url": "https://brasilparticipativo.presidencia.gov.br/processes/referencialianaeducacao/f/1691/?locale=pt-BR&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:27.967104+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "<visual_element id=\"e1\">",
+            "source_url": "https://cead.uesb.br/wp-content/uploads/2026/03/Guia-Desenvolvimento-e-uso-Responsavel-da-Inteligencia-Artificial-na-Educacao.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:27.967104+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Governing generative AI in higher education: a global Delphi study on policy and practice",
+            "source_url": "https://link.springer.com/article/10.1186/s41239-026-00602-z?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:27.967104+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Entre orientar e prescrever: a institucionalização da IA generativa em universidades públicas brasileiras",
+            "source_url": "https://revistas.uepg.br/index.php/praxiseducativa/pt_BR/article/view/26177?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:27.967104+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Generative artificial intelligence (AI) in education - GOV.UK",
+            "source_url": "https://www.gov.uk/government/publications/generative-artificial-intelligence-in-education/generative-artificial-intelligence-ai-in-education?pStoreID=bizclubsilverb%2Fgb-en%2Fshop&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:27.967104+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Guidance for generative AI in education and research - Africa Education Knowledge Platform",
+            "source_url": "https://www.iicba.unesco.org/en/africa-education-knowledge-platform/guidance-generative-ai-education-and-research?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:27.967104+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Generative AI in Higher Education: Seeing ChatGPT Through Universities' Policies, Resources, and Guidelines",
+            "source_url": "https://arxiv.org/abs/2312.05235?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:13:27.967104+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          }
+        ],
+        "phase_timings_seconds": {
+          "search": 0.0,
+          "analysis": 81.6317037000008,
+          "publication_barrier_wait": 2.7999994927085936e-06,
+          "cross_agent_refinement": 32.39042639999934,
+          "total": 278.0033334
+        },
+        "refinement_status": "COMPLETED"
+      }
+    ],
+    "integrated_findings_count": 24,
+    "model_assigned_evidence_status_counts": {
+      "SUPPORTED": 24,
+      "REFUTED": 0,
+      "INSUFFICIENT": 0,
+      "CONFLICTING": 0,
+      "OUTDATED": 0
+    },
+    "provider_citations": [
+      {
+        "title": "Guia para a IA generativa na educação e na pesquisa | UNESCO",
+        "url": "https://www.unesco.org/pt/articles/guia-para-ia-generativa-na-educacao-e-na-pesquisa?hub=752-8&utm_source=openai",
+        "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02",
+          "agent-03"
+        ]
+      },
+      {
+        "title": "Guia de Boas Práticas de IA Generativa — Governo Digital",
+        "url": "https://www.gov.br/governodigital/pt-br/infraestrutura-nacional-de-dados/inteligencia-artificial-1/publicacoes/guia-ia-generativa?trk=article-ssr-frontend-pulse_little-text-block&utm_source=openai",
+        "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02",
+          "agent-03"
+        ]
+      },
+      {
+        "title": "GAIE : Report Structure and Main Doc",
+        "url": "https://teaching.cornell.edu/sites/default/files/2023-08/Cornell-GenerativeAIForEducation-Report_2.pdf?utm_source=openai",
+        "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02",
+          "agent-03"
+        ]
+      },
+      {
+        "title": "School of Education Guidelines for Generative AI",
+        "url": "https://kb.wisc.edu/merit/161266?utm_source=openai",
+        "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02",
+          "agent-03"
+        ]
+      },
+      {
+        "title": "Recomendação n.º 4/2026, de 21 de maio | DR",
+        "url": "https://diariodarepublica.pt/dr/detalhe/recomendacao/4-2026-1124911989?utm_source=openai",
+        "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02",
+          "agent-03"
+        ]
+      },
+      {
+        "title": "# 3.1 Quais as oportunidades e os riscos do uso da IA no processo de ensino-aprendizagem?",
+        "url": "https://www.computacional.com.br/ia/publicacoes_relevantes/Atos_Normativos/MEC_-_IA_na_Educacao_Basica.pdf?utm_source=openai",
+        "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02",
+          "agent-03"
+        ]
+      },
+      {
+        "title": "SOBRE - Referencial para Desenvolvimento e Uso Responsáveis de Inteligência Artificial na Educação - Brasil Participativo",
+        "url": "https://brasilparticipativo.presidencia.gov.br/processes/referencialianaeducacao/f/1691/?locale=pt-BR&utm_source=openai",
+        "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02",
+          "agent-03"
+        ]
+      },
+      {
+        "title": "<visual_element id=\"e1\">",
+        "url": "https://cead.uesb.br/wp-content/uploads/2026/03/Guia-Desenvolvimento-e-uso-Responsavel-da-Inteligencia-Artificial-na-Educacao.pdf?utm_source=openai",
+        "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02",
+          "agent-03"
+        ]
+      },
+      {
+        "title": "Governing generative AI in higher education: a global Delphi study on policy and practice",
+        "url": "https://link.springer.com/article/10.1186/s41239-026-00602-z?utm_source=openai",
+        "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02",
+          "agent-03"
+        ]
+      },
+      {
+        "title": "Entre orientar e prescrever: a institucionalização da IA generativa em universidades públicas brasileiras",
+        "url": "https://revistas.uepg.br/index.php/praxiseducativa/pt_BR/article/view/26177?utm_source=openai",
+        "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02",
+          "agent-03"
+        ]
+      },
+      {
+        "title": "Generative artificial intelligence (AI) in education - GOV.UK",
+        "url": "https://www.gov.uk/government/publications/generative-artificial-intelligence-in-education/generative-artificial-intelligence-ai-in-education?pStoreID=bizclubsilverb%2Fgb-en%2Fshop&utm_source=openai",
+        "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02",
+          "agent-03"
+        ]
+      },
+      {
+        "title": "Guidance for generative AI in education and research - Africa Education Knowledge Platform",
+        "url": "https://www.iicba.unesco.org/en/africa-education-knowledge-platform/guidance-generative-ai-education-and-research?utm_source=openai",
+        "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02",
+          "agent-03"
+        ]
+      },
+      {
+        "title": "Generative AI in Higher Education: Seeing ChatGPT Through Universities' Policies, Resources, and Guidelines",
+        "url": "https://arxiv.org/abs/2312.05235?utm_source=openai",
+        "accessed_at": "2026-11-12T14:13:53.310960+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02",
+          "agent-03"
+        ]
+      }
+    ],
+    "model_reported_references": [],
+    "overlap_groups_count": 6,
+    "note": "Evidence labels are model assessments. Citation annotations establish provider-returned URLs, not source reliability or semantic support. This record omits raw model responses and retrieved page content."
+  },
+  "rave-5273a5e51124": {
+    "run_id": "rave-5273a5e51124",
+    "mode": "independent_research",
+    "execution_status": "PARTIAL",
+    "model_for_analysis": "gpt-4.1-mini",
+    "question": "Quais s?o os benef?cios, riscos e recomenda??es atuais para o uso de intelig?ncia artificial generativa na educa??o? Compare fontes institucionais e apresente limites e diverg?ncias.",
+    "scope": "Investigar a pergunta sem expandir al?m do necess?rio.",
+    "started_at": "2026-11-12T14:15:35.032940+00:00",
+    "completed_at": "2026-11-12T14:24:05.431629+00:00",
+    "duration_seconds": 510.39919589999954,
+    "total_calls": 11,
+    "prompt_tokens": 163113,
+    "completion_tokens": 57401,
+    "messages_count": 30,
+    "calls": [
+      {
+        "purpose": "agent_independent_search",
+        "model": "gpt-5-search-api",
+        "status": "COMPLETED",
+        "prompt_tokens": 16844,
+        "completion_tokens": 2202,
+        "duration_seconds": 13.542547199998808,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "agent_independent_search",
+        "model": "gpt-5-search-api",
+        "status": "COMPLETED",
+        "prompt_tokens": 16915,
+        "completion_tokens": 1706,
+        "duration_seconds": 24.6268713999998,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "agent_independent_search",
+        "model": "gpt-5-search-api",
+        "status": "COMPLETED",
+        "prompt_tokens": 31782,
+        "completion_tokens": 2385,
+        "duration_seconds": 44.0677467000005,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "agent_initial_analysis",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 5049,
+        "completion_tokens": 3240,
+        "duration_seconds": 53.534768199999235,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "agent_initial_analysis",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 3917,
+        "completion_tokens": 3525,
+        "duration_seconds": 79.72955560000082,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "agent_initial_analysis",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 4771,
+        "completion_tokens": 3382,
+        "duration_seconds": 82.75839489999998,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "cross_agent_refinement",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 16648,
+        "completion_tokens": 11334,
+        "duration_seconds": 165.14446250000037,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "cross_agent_refinement",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 17392,
+        "completion_tokens": 10816,
+        "duration_seconds": 245.4735972999988,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "json_repair",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 12813,
+        "completion_tokens": 7623,
+        "duration_seconds": 136.62252459999945,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "json_repair",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 12180,
+        "completion_tokens": 8705,
+        "duration_seconds": 114.66896930000075,
+        "request_attempts": 1
+      },
+      {
+        "purpose": "final_synthesis",
+        "model": "gpt-4.1-mini",
+        "status": "COMPLETED",
+        "prompt_tokens": 24802,
+        "completion_tokens": 2483,
+        "duration_seconds": 23.358179900000323,
+        "request_attempts": 1
+      }
+    ],
+    "phase_timings_seconds": {
+      "agent_research_and_peer_integration": 487.03772670000035,
+      "local_integration": 0.0003536000003805384,
+      "final_synthesis": 23.360309399999096
+    },
+    "failed_agents": [
+      {
+        "agent_id": "agent-03",
+        "error_type": "TimeoutError"
+      }
+    ],
+    "agent_summaries": [
+      {
+        "agent_id": "agent-01",
+        "agent_name": "Fundamentos",
+        "status": "COMPLETED",
+        "initial_findings_count": 4,
+        "final_findings_count": 15,
+        "provider_citations": [
+          {
+            "source_title": "Annex 1\n\nII. Contribution to the questions on gene",
+            "source_url": "https://one.oecd.org/document/DAF/COMP/WD%282024%2936/en/pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "GAIE : Report Structure and Main Doc",
+            "source_url": "https://teaching.cornell.edu/sites/default/files/2024-01/Cornell-GenerativeAIForEducation-Report_2.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "An Introduction to Generative Artificial Intelligence for Academics",
+            "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13229007/?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Generative artificial intelligence (AI) in education - GOV.UK",
+            "source_url": "https://www.gov.uk/government/publications/generative-artificial-intelligence-in-education/generative-artificial-intelligence-ai-in-education?pStoreID=hp_education%270%27%5B0%5D%27%5B0%5D&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "OECD Digital Education Outlook 2026 (EN)",
+            "source_url": "https://www.oecd.org/content/dam/oecd/en/publications/reports/2026/01/oecd-digital-education-outlook-2026_940e0dd8/062a7394-en.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "GAIE : Report Structure and Main Doc",
+            "source_url": "https://teaching.cornell.edu/sites/default/files/2023-08/Cornell-GenerativeAIForEducation-Report_2.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Institutional approaches to generative AI management in higher education: a systematic review",
+            "source_url": "https://doi.org/10.3389/feduc.2026.1814426?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "OECD Digital Education Outlook 2026: Exploring Effective Uses of Generative AI in Education",
+            "source_url": "https://www.oecd.org/en/publications/oecd-digital-education-outlook-2026_062a7394-en.html?adestraproject=OECD+Education+and+Skills+Newsletter&ut=&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "CU Committee Report: Generative Artificial Intelligence for Education and Pedagogy | Center for Teaching Innovation",
+            "source_url": "https://teaching.cornell.edu/generative-artificial-intelligence/cu-committee-report-generative-artificial-intelligence-education?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Generative artificial intelligence in higher education: Evidence from an analysis of institutional policies and guidelines",
+            "source_url": "https://doi.org/10.1016/j.chbah.2025.100121?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Expert consensus report: Ways generative AI can support and threaten learning in K-20 U.S. education | College of Education and Human Development",
+            "source_url": "https://www.cehd.umn.edu/AI-expert-consensus-report-2026?trk=public_post_comment-text&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Chicago parents protest Google's AI school policy",
+            "source_url": "https://www.axios.com/local/chicago/2026/11/09/google-wont-turn-off-artificial-intelligence-overview-on-school-search?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Generative artificial intelligence in education from a technology research perspective: a scoping review of empirical studies from leading educational technology conferences",
+            "source_url": "https://link.springer.com/article/10.1007/s44436-026-00031-9?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Practical and Ethical Challenges of Large Language Models in Education: A Systematic Scoping Review",
+            "source_url": "https://arxiv.org/abs/2303.13379?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          }
+        ],
+        "phase_timings_seconds": {
+          "search": 13.550141100000474,
+          "analysis": 53.53571720000036,
+          "publication_barrier_wait": 59.767844399999376,
+          "cross_agent_refinement": 165.1514776999993,
+          "total": 428.6724113
+        },
+        "refinement_status": "COMPLETED"
+      },
+      {
+        "agent_id": "agent-02",
+        "agent_name": "Mecanismos",
+        "status": "COMPLETED",
+        "initial_findings_count": 6,
+        "final_findings_count": 15,
+        "provider_citations": [
+          {
+            "source_title": "Al Hub for Education",
+            "source_url": "https://scale.stanford.edu/sites/default/files/The%20Evidence%20Base%20on%20AI%20in%20K-12%20November%202026%20Review.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Experimental Evidence on the Learning Impact of Generative AI | IZA - Institute of Labor Economics",
+            "source_url": "https://www.iza.org/publications/dp/18792/none?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Effect of generative artificial intelligence on university students learning outcomes: A systematic review and meta-analysis",
+            "source_url": "https://www.sciencedirect.com/science/article/pii/S1747938X25000740?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "OECD Digital Education Outlook 2026: Exploring Effective Uses of Generative AI in Education",
+            "source_url": "https://www.oecd.org/en/publications/oecd-digital-education-outlook-2026_062a7394-en.html?adestraproject=OECD+Education+and+Skills+Newsletter&ut=&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Expert consensus report: Ways generative AI can support and threaten learning in K-20 U.S. education | College of Education and Human Development",
+            "source_url": "https://www.cehd.umn.edu/AI-expert-consensus-report-2026?trk=public_post_comment-text&utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Learning outcomes with GenAI in the classroom",
+            "source_url": "https://www.microsoft.com/en-us/research/wp-content/uploads/2025/10/GenAILearningOutcomes_published_2025-12-16.pdf?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Institutional approaches to generative AI management in higher education: a systematic review",
+            "source_url": "https://doi.org/10.3389/feduc.2026.1814426?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "Generative AI, Cognitive Offloading, and Learner Agency in Higher Education: A Scoping Review",
+            "source_url": "https://www.mdpi.com/2076-328x/16/7/1150?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          },
+          {
+            "source_title": "A systematic review of generative AI in education: Empirical insights from a human–AI interaction perspective",
+            "source_url": "https://bera-journals.onlinelibrary.wiley.com/doi/10.1111/bjet.70055?utm_source=openai",
+            "supporting_excerpt_or_location": "Citation returned by search tool",
+            "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+            "author_or_institution": "",
+            "published_at": "",
+            "updated_at": "",
+            "source_type": "",
+            "origin_finding_ids": [],
+            "citation_provenance": "provider_returned"
+          }
+        ],
+        "phase_timings_seconds": {
+          "search": 24.628087799999776,
+          "analysis": 79.7303396999996,
+          "publication_barrier_wait": 22.499197600000116,
+          "cross_agent_refinement": 245.49238650000007,
+          "total": 487.0290074000004
+        },
+        "refinement_status": "COMPLETED"
+      }
+    ],
+    "integrated_findings_count": 30,
+    "model_assigned_evidence_status_counts": {
+      "SUPPORTED": 30,
+      "REFUTED": 0,
+      "INSUFFICIENT": 0,
+      "CONFLICTING": 0,
+      "OUTDATED": 0
+    },
+    "provider_citations": [
+      {
+        "title": "Annex 1\n\nII. Contribution to the questions on gene",
+        "url": "https://one.oecd.org/document/DAF/COMP/WD%282024%2936/en/pdf?utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01"
+        ]
+      },
+      {
+        "title": "GAIE : Report Structure and Main Doc",
+        "url": "https://teaching.cornell.edu/sites/default/files/2024-01/Cornell-GenerativeAIForEducation-Report_2.pdf?utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01"
+        ]
+      },
+      {
+        "title": "An Introduction to Generative Artificial Intelligence for Academics",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13229007/?utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01"
+        ]
+      },
+      {
+        "title": "Generative artificial intelligence (AI) in education - GOV.UK",
+        "url": "https://www.gov.uk/government/publications/generative-artificial-intelligence-in-education/generative-artificial-intelligence-ai-in-education?pStoreID=hp_education%270%27%5B0%5D%27%5B0%5D&utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01"
+        ]
+      },
+      {
+        "title": "OECD Digital Education Outlook 2026 (EN)",
+        "url": "https://www.oecd.org/content/dam/oecd/en/publications/reports/2026/01/oecd-digital-education-outlook-2026_940e0dd8/062a7394-en.pdf?utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01"
+        ]
+      },
+      {
+        "title": "GAIE : Report Structure and Main Doc",
+        "url": "https://teaching.cornell.edu/sites/default/files/2023-08/Cornell-GenerativeAIForEducation-Report_2.pdf?utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01"
+        ]
+      },
+      {
+        "title": "Institutional approaches to generative AI management in higher education: a systematic review",
+        "url": "https://doi.org/10.3389/feduc.2026.1814426?utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02"
+        ]
+      },
+      {
+        "title": "OECD Digital Education Outlook 2026: Exploring Effective Uses of Generative AI in Education",
+        "url": "https://www.oecd.org/en/publications/oecd-digital-education-outlook-2026_062a7394-en.html?adestraproject=OECD+Education+and+Skills+Newsletter&ut=&utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02"
+        ]
+      },
+      {
+        "title": "CU Committee Report: Generative Artificial Intelligence for Education and Pedagogy | Center for Teaching Innovation",
+        "url": "https://teaching.cornell.edu/generative-artificial-intelligence/cu-committee-report-generative-artificial-intelligence-education?utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01"
+        ]
+      },
+      {
+        "title": "Generative artificial intelligence in higher education: Evidence from an analysis of institutional policies and guidelines",
+        "url": "https://doi.org/10.1016/j.chbah.2025.100121?utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01"
+        ]
+      },
+      {
+        "title": "Expert consensus report: Ways generative AI can support and threaten learning in K-20 U.S. education | College of Education and Human Development",
+        "url": "https://www.cehd.umn.edu/AI-expert-consensus-report-2026?trk=public_post_comment-text&utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01",
+          "agent-02"
+        ]
+      },
+      {
+        "title": "Chicago parents protest Google's AI school policy",
+        "url": "https://www.axios.com/local/chicago/2026/11/09/google-wont-turn-off-artificial-intelligence-overview-on-school-search?utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01"
+        ]
+      },
+      {
+        "title": "Generative artificial intelligence in education from a technology research perspective: a scoping review of empirical studies from leading educational technology conferences",
+        "url": "https://link.springer.com/article/10.1007/s44436-026-00031-9?utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01"
+        ]
+      },
+      {
+        "title": "Practical and Ethical Challenges of Large Language Models in Education: A Systematic Scoping Review",
+        "url": "https://arxiv.org/abs/2303.13379?utm_source=openai",
+        "accessed_at": "2026-11-12T14:22:43.705567+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-01"
+        ]
+      },
+      {
+        "title": "Al Hub for Education",
+        "url": "https://scale.stanford.edu/sites/default/files/The%20Evidence%20Base%20on%20AI%20in%20K-12%20November%202026%20Review.pdf?utm_source=openai",
+        "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-02"
+        ]
+      },
+      {
+        "title": "Experimental Evidence on the Learning Impact of Generative AI | IZA - Institute of Labor Economics",
+        "url": "https://www.iza.org/publications/dp/18792/none?utm_source=openai",
+        "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-02"
+        ]
+      },
+      {
+        "title": "Effect of generative artificial intelligence on university students learning outcomes: A systematic review and meta-analysis",
+        "url": "https://www.sciencedirect.com/science/article/pii/S1747938X25000740?utm_source=openai",
+        "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-02"
+        ]
+      },
+      {
+        "title": "Learning outcomes with GenAI in the classroom",
+        "url": "https://www.microsoft.com/en-us/research/wp-content/uploads/2025/10/GenAILearningOutcomes_published_2025-12-16.pdf?utm_source=openai",
+        "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-02"
+        ]
+      },
+      {
+        "title": "Generative AI, Cognitive Offloading, and Learner Agency in Higher Education: A Scoping Review",
+        "url": "https://www.mdpi.com/2076-328x/16/7/1150?utm_source=openai",
+        "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-02"
+        ]
+      },
+      {
+        "title": "A systematic review of generative AI in education: Empirical insights from a human–AI interaction perspective",
+        "url": "https://bera-journals.onlinelibrary.wiley.com/doi/10.1111/bjet.70055?utm_source=openai",
+        "accessed_at": "2026-11-12T14:23:42.070691+00:00",
+        "citation_origin": "provider_tool_annotation",
+        "agents": [
+          "agent-02"
+        ]
+      }
+    ],
+    "model_reported_references": [
+      {
+        "url": "https://scale.stanford.edu/sites/default/files/The%20Evidence%20Base%20on%20AI%20in%20K-12%20November%202026%20Review.pdf?utm_source=openai",
+        "agents": [
+          "agent-01"
+        ],
+        "finding_ids": [
+          "finding-9d27e0117e67",
+          "finding-256637bab05b"
+        ],
+        "occurrences": 2
+      },
+      {
+        "url": "https://www.iza.org/publications/dp/18792/none?utm_source=openai",
+        "agents": [
+          "agent-01"
+        ],
+        "finding_ids": [
+          "finding-795d9291e768"
+        ],
+        "occurrences": 1
+      },
+      {
+        "url": "https://www.microsoft.com/en-us/research/wp-content/uploads/2025/10/GenAILearningOutcomes_published_2025-12-16.pdf?utm_source=openai",
+        "agents": [
+          "agent-01"
+        ],
+        "finding_ids": [
+          "finding-0b694218781f"
+        ],
+        "occurrences": 1
+      },
+      {
+        "url": "https://www.mdpi.com/2076-328x/16/7/1150?utm_source=openai",
+        "agents": [
+          "agent-01"
+        ],
+        "finding_ids": [
+          "finding-fc3aa71e3960"
+        ],
+        "occurrences": 1
+      },
+      {
+        "url": "https://bera-journals.onlinelibrary.wiley.com/doi/10.1111/bjet.70055?utm_source=openai",
+        "agents": [
+          "agent-01"
+        ],
+        "finding_ids": [
+          "finding-fc3aa71e3960"
+        ],
+        "occurrences": 1
+      },
+      {
+        "url": "https://www.sciencedirect.com/science/article/pii/S1747938X25000740?utm_source=openai",
+        "agents": [
+          "agent-01"
+        ],
+        "finding_ids": [
+          "finding-ea89e112a794",
+          "finding-0027be3ac544"
+        ],
+        "occurrences": 2
+      },
+      {
+        "url": "https://www.nature.com/articles/s41599-026-08959-2?utm_source=openai",
+        "agents": [
+          "agent-01",
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-ea89e112a794",
+          "finding-cf8716e199f5"
+        ],
+        "occurrences": 2
+      },
+      {
+        "url": "https://agenciagov.ebc.com.br/noticias/202611/governo-federal-estabelece-diretrizes-para-uso-responsavel-da-ia-na-educacao?utm_source=openai",
+        "agents": [
+          "agent-01",
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-83afde472ea8",
+          "finding-7a5e37566036",
+          "finding-cadecf38f52a",
+          "finding-67adb555a8f9"
+        ],
+        "occurrences": 4
+      },
+      {
+        "url": "https://doi.org/10.1016/j.caeai.2026.100561?utm_source=openai",
+        "agents": [
+          "agent-01",
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-83afde472ea8",
+          "finding-7a5e37566036",
+          "finding-cadecf38f52a",
+          "finding-67adb555a8f9"
+        ],
+        "occurrences": 4
+      },
+      {
+        "url": "https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2026.1971476/full?utm_source=openai",
+        "agents": [
+          "agent-01",
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-0027be3ac544",
+          "finding-f29c67d95484"
+        ],
+        "occurrences": 2
+      },
+      {
+        "url": "https://brasilparticipativo.presidencia.gov.br/processes/referencialianaeducacao/f/1691/?locale=pt-BR&utm_source=openai",
+        "agents": [
+          "agent-01",
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-3f7092a34554",
+          "finding-d53db8cb7684"
+        ],
+        "occurrences": 2
+      },
+      {
+        "url": "https://www.unesco.org/pt/articles/guia-para-ia-generativa-na-educacao-e-na-pesquisa?hub=752-8&utm_source=openai",
+        "agents": [
+          "agent-01",
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-3f7092a34554",
+          "finding-d53db8cb7684"
+        ],
+        "occurrences": 2
+      },
+      {
+        "url": "https://one.oecd.org/document/DAF/COMP/WD%282024%2936/en/pdf?utm_source=openai",
+        "agents": [
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-e891c4591238"
+        ],
+        "occurrences": 1
+      },
+      {
+        "url": "https://teaching.cornell.edu/sites/default/files/2024-01/Cornell-GenerativeAIForEducation-Report_2.pdf?utm_source=openai",
+        "agents": [
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-e891c4591238"
+        ],
+        "occurrences": 1
+      },
+      {
+        "url": "https://www.gov.uk/government/publications/generative-artificial-intelligence-in-education/generative-artificial-intelligence-ai-in-education?pStoreID=hp_education%270%27%5B0%5D%27%5B0%5D&utm_source=openai",
+        "agents": [
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-e891c4591238",
+          "finding-c5372118eee1"
+        ],
+        "occurrences": 2
+      },
+      {
+        "url": "https://www.oecd.org/content/dam/oecd/en/publications/reports/2026/01/oecd-digital-education-outlook-2026_940e0dd8/062a7394-en.pdf?utm_source=openai",
+        "agents": [
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-f5b26b358ce0",
+          "finding-56b5519b2e48"
+        ],
+        "occurrences": 2
+      },
+      {
+        "url": "https://teaching.cornell.edu/sites/default/files/2023-08/Cornell-GenerativeAIForEducation-Report_2.pdf?utm_source=openai",
+        "agents": [
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-f5b26b358ce0",
+          "finding-c5372118eee1"
+        ],
+        "occurrences": 2
+      },
+      {
+        "url": "https://teaching.cornell.edu/generative-artificial-intelligence/cu-committee-report-generative-artificial-intelligence-education?utm_source=openai",
+        "agents": [
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-56b5519b2e48"
+        ],
+        "occurrences": 1
+      },
+      {
+        "url": "https://doi.org/10.1016/j.chbah.2025.100121?utm_source=openai",
+        "agents": [
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-56b5519b2e48"
+        ],
+        "occurrences": 1
+      },
+      {
+        "url": "https://www.axios.com/local/chicago/2026/11/09/google-wont-turn-off-artificial-intelligence-overview-on-school-search?utm_source=openai",
+        "agents": [
+          "agent-02"
+        ],
+        "finding_ids": [
+          "finding-c5372118eee1"
+        ],
+        "occurrences": 1
+      }
+    ],
+    "overlap_groups_count": 15,
+    "note": "Evidence labels are model assessments. Citation annotations establish provider-returned URLs, not source reliability or semantic support. This record omits raw model responses and retrieved page content."
+  }
+}

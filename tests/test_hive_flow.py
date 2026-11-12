@@ -31,10 +31,11 @@ class ResearchClient:
                 raise AssertionError("Agents should analyze the shared research corpus without duplicate searches")
             if prompt["phase"] == "independent_investigation":
                 self.analyzed_agents.append(agent)
-                assert prompt["shared_web_research"]["research_notes"] == "Shared research from official sources."
-                assert len(prompt["shared_web_research"]["sources"]) == 2
+                assert prompt["research_material"]["research_notes"] == "Shared research from official sources."
+                assert prompt["research_material"]["research_mode"] == "shared_research"
+                assert len(prompt["research_material"]["sources"]) == 2
                 summary = f"Research result from agent {agent}"
-                citations = prompt["shared_web_research"]["sources"]
+                citations = prompt["provider_citations"]
             else:
                 assert prompt["phase"] == "cross_agent_integration"
                 assert prompt["peer_contributions"]
@@ -62,3 +63,21 @@ def test_three_agents_search_share_and_synthesize(tmp_path):
     assert all(len(source["agents"]) == 3 for source in saved["integration"]["web_sources"])
     assert result["final_output"]["executive_answer"] == "Integrated answer"
     assert len(result["final_output"]["web_sources"]) == 2
+
+
+def test_shared_search_failure_does_not_silently_switch_to_independent(tmp_path):
+    class FailedSharedSearchClient(ResearchClient):
+        def complete(self, system, user, *, web_search=False):
+            if system.startswith("You are the RAVE Hive Core shared web research component."):
+                raise TimeoutError("simulated shared-search timeout")
+            raise AssertionError("Agents or synthesis must not run after the shared search fails")
+
+    result = asyncio.run(HiveCore(FailedSharedSearchClient(), str(tmp_path)).run(
+        "Small research question", "Keep it concise"))
+
+    saved = json.loads(Path(result["result_path"]).read_text(encoding="utf-8"))
+    assert result["research_mode"] == "shared_research"
+    assert result["execution_status"] == "INVALID"
+    assert result["shared_research_error"] == "TimeoutError"
+    assert len(saved["failed_agents"]) == 3
+    assert saved["agent_results"] == []

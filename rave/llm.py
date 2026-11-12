@@ -170,7 +170,9 @@ class ChatCompletionsClient:
         if "single_agent_baseline" in user:
             return "single_agent_analysis"
         if "RAVE Agent " in system:
-            return "agent_initial_research" if web_search else "agent_initial_analysis"
+            return "agent_independent_search" if web_search else "agent_initial_analysis"
+        if "specialized research retriever" in system:
+            return "agent_independent_search" if web_search else "agent_initial_analysis"
         return "web_search" if web_search else "llm_completion"
 
     @staticmethod
