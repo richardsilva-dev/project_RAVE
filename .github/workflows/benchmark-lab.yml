@@ -1,0 +1,23 @@
+name: benchmark-lab-tests
+on:
+  push:
+    branches: [benchmark-preparation]
+  pull_request:
+    branches: [main]
+    paths:
+      - "benchmark_lab/**"
+      - ".github/workflows/benchmark-lab.yml"
+jobs:
+  solo-baseline:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark_lab
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[dev]"
+      - run: pytest -q
