@@ -57,6 +57,7 @@ class AgentResult:
     raw_response: str = ""
     usage: dict[str, int] = field(default_factory=dict)
     web_sources: list[Evidence] = field(default_factory=list)
+    phase_timings: dict[str, float] = field(default_factory=dict)
 
 @dataclass
 class AgentMessage:

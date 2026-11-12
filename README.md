@@ -34,13 +34,13 @@ rave hive "Pergunta a investigar"
 pytest
 ```
 
-Os resultados são salvos como JSON em `data/runs/`. O cliente usa endpoint compatível com OpenAI Chat Completions. As investigações usam pesquisa web hospedada pela OpenAI via Responses API; as fontes retornadas são registradas para auditoria. Verifique fontes e referências antes de pontuar os resultados.
+Os resultados são salvos como JSON em `data/runs/`. O cliente usa endpoint compatível com OpenAI Chat Completions. As investigações usam o modelo de pesquisa `gpt-5-search-api`; as fontes citadas são registradas para auditoria. Verifique fontes e referências antes de pontuar os resultados.
 
 Consulte `docs/ARCHITECTURE.md` e `docs/EXPERIMENT.md` antes de interpretar os outputs.
 
 ## Pesquisa web
 
-As investigações usam a pesquisa web hospedada pela OpenAI via Responses API. Por padrão, cada agente executa pesquisa e as fontes retornadas são guardadas nos resultados para auditoria. Isso gera chamadas e custos adicionais de API. Para desativar, defina RAVE_WEB_SEARCH=false no .env. A pesquisa requer RAVE_BASE_URL=https://api.openai.com/v1; endpoints compatíveis podem ser usados com pesquisa desativada. Confira se cada fonte sustenta a afirmação associada.
+O Hive faz uma pesquisa web compartilhada pela OpenAI via Chat Completions e `gpt-5-search-api`. Os três agentes analisam o conjunto citado em suas especialidades, compartilham descobertas e passam pela síntese final. Essa abordagem reduz chamadas repetidas e respeita limites de taxa mais baixos. As citações são guardadas nos resultados para auditoria. Para desativar, defina `RAVE_WEB_SEARCH=false` no `.env`. A pesquisa requer `RAVE_BASE_URL=https://api.openai.com/v1`; endpoints compatíveis podem ser usados com pesquisa desativada. Confira se cada fonte sustenta a afirmação associada.
 
 ## Limite de requisições
 

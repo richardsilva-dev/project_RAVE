@@ -21,14 +21,11 @@ class FakeHTTPResponse:
         return self.payload
 
 
-def test_responses_web_search_returns_text_sources_and_usage():
-    payload = {"output": [
-        {"type": "web_search_call", "action": {"sources": [
-            {"title": "Source", "url": "https://example.org/source"}]}},
-        {"type": "message", "content": [{"type": "output_text", "text": "{\"findings\": []}",
-            "annotations": [{"type": "url_citation", "url_citation": {
-                "title": "Source", "url": "https://example.org/source"}}]}]},
-    ], "usage": {"input_tokens": 12, "output_tokens": 6}}
+def test_chat_completions_web_search_returns_text_sources_and_usage():
+    payload = {"choices": [{"message": {"content": "{\"findings\": []}",
+        "annotations": [{"type": "url_citation", "url_citation": {
+            "title": "Source", "url": "https://example.org/source"}}]}}],
+        "usage": {"prompt_tokens": 12, "completion_tokens": 6}}
     settings = Settings("test-key", "https://api.openai.com/v1", "chat-model", 0.2, 30,
         "data/runs", True, "search-model")
     client = ChatCompletionsClient(settings)
@@ -36,9 +33,11 @@ def test_responses_web_search_returns_text_sources_and_usage():
         response = client.complete("system", "question", web_search=True)
     request = open_url.call_args.args[0]
     sent = json.loads(request.data.decode("utf-8"))
-    assert request.full_url == "https://api.openai.com/v1/responses"
+    assert request.full_url == "https://api.openai.com/v1/chat/completions"
     assert sent["model"] == "search-model"
-    assert sent["tool_choice"] == "required"
+    assert sent["web_search_options"]["search_context_size"] == "low"
+    assert sent["max_completion_tokens"] == 512
+    assert sent["messages"][0] == {"role": "system", "content": "system"}
     assert response.content == "{\"findings\": []}"
     assert response.citations == [{"title": "Source", "url": "https://example.org/source"}]
     assert response.usage == {"prompt_tokens": 12, "completion_tokens": 6}
@@ -76,3 +75,35 @@ def test_transient_rate_limit_retries_then_completes():
     assert response.content == "ok"
     assert open_url.call_count == 2
     sleep.assert_called_once_with(0.0)
+
+
+def test_retry_waits_for_later_token_reset_header():
+    settings = Settings("test-key", "https://api.openai.com/v1", "chat-model")
+    client = ChatCompletionsClient(settings)
+    limited_body = json.dumps({"error": {"type": "rate_limit_error", "code": "rate_limit_exceeded"}}).encode()
+    rate_limit = urllib.error.HTTPError("https://api.openai.com/v1/responses", 429,
+        "Too Many Requests", {"Retry-After": "23", "x-ratelimit-reset-tokens": "27.3s"},
+        io.BytesIO(limited_body))
+    success = FakeHTTPResponse({"choices": [{"message": {"content": "{\"summary\": \"ok\"}"}}],
+        "usage": {"prompt_tokens": 1, "completion_tokens": 1}})
+    with patch("rave.llm.urllib.request.urlopen", side_effect=[rate_limit, success]) as open_url:
+        with patch("rave.llm.time.sleep") as sleep:
+            response = client.complete("system", "question", web_search=True)
+    assert response.content == "{\"summary\": \"ok\"}"
+    assert open_url.call_count == 2
+    sleep.assert_called_once_with(27.3)
+
+
+def test_retry_honors_long_server_token_reset():
+    settings = Settings("test-key", "https://api.openai.com/v1", "chat-model")
+    client = ChatCompletionsClient(settings)
+    limited_body = json.dumps({"error": {"type": "rate_limit_error", "code": "rate_limit_exceeded"}}).encode()
+    rate_limit = urllib.error.HTTPError("https://api.openai.com/v1/chat/completions", 429,
+        "Too Many Requests", {"Retry-After": "370.375"}, io.BytesIO(limited_body))
+    success = FakeHTTPResponse({"choices": [{"message": {"content": "ok"}}], "usage": {}})
+    with patch("rave.llm.urllib.request.urlopen", side_effect=[rate_limit, success]) as open_url:
+        with patch("rave.llm.time.sleep") as sleep:
+            response = client.complete("system", "question")
+    assert response.content == "ok"
+    assert open_url.call_count == 2
+    sleep.assert_called_once_with(370.375)

@@ -1,4 +1,6 @@
 import json
+import re
+import logging
 import time
 import urllib.error
 import urllib.request
@@ -8,6 +10,8 @@ from datetime import datetime, timezone
 from threading import BoundedSemaphore
 from typing import Any
 from .config import Settings
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class LLMResponse:
@@ -29,10 +33,14 @@ class ChatCompletionsClient:
         if web_search:
             if not self.settings.web_search_enabled:
                 raise RuntimeError("Web search is disabled in configuration")
-            payload = {"model": self.settings.web_search_model, "instructions": system, "input": user,
-                "tools": [{"type": "web_search", "search_context_size": "medium"}],
-                "tool_choice": "required", "include": ["web_search_call.action.sources"]}
-            endpoint = f"{self.settings.base_url}/responses"
+            # The dedicated Chat Completions search model always searches before
+            # answering and is compatible with projects whose Responses search
+            # model has a tighter token rate limit.
+            payload = {"model": self.settings.web_search_model,
+                "web_search_options": {"search_context_size": self.settings.web_search_context_size},
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                "max_completion_tokens": self.settings.web_search_max_output_tokens}
+            endpoint = f"{self.settings.base_url}/chat/completions"
         else:
             payload = {"model": self.settings.model, "temperature": self.settings.temperature,
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
@@ -41,69 +49,63 @@ class ChatCompletionsClient:
             data=json.dumps(payload).encode("utf-8"),
             headers={"Authorization": f"Bearer {self.settings.api_key}", "Content-Type": "application/json"},
             method="POST")
-        for attempt in range(3):
-            try:
-                with self._request_semaphore:
+        with self._request_semaphore:
+            for attempt in range(3):
+                try:
                     with urllib.request.urlopen(request, timeout=self.settings.timeout_seconds) as response:
                         body: dict[str, Any] = json.loads(response.read().decode("utf-8"))
-                break
-            except urllib.error.HTTPError as exc:
-                error_code, error_type = self._safe_error_fields(exc)
-                retry_after = self._retry_after_seconds(exc.headers.get("Retry-After"))
-                transient_rate_limit = exc.code == 429 and (
-                    error_code in {"rate_limit_exceeded", "slow_down"} or error_type == "rate_limit_error"
-                )
-                if transient_rate_limit and attempt < 2:
-                    delay = retry_after if retry_after is not None else 2 ** attempt
-                    if delay <= 30:
-                        time.sleep(delay)
-                        continue
-                details = []
-                if error_code:
-                    details.append(f"code={error_code}")
-                if error_type:
-                    details.append(f"type={error_type}")
-                if retry_after is not None:
-                    details.append(f"retry_after={retry_after:g}s")
-                suffix = f" ({', '.join(details)})" if details else ""
-                raise RuntimeError(f"LLM provider returned HTTP {exc.code}{suffix}") from exc
-            except urllib.error.URLError as exc:
-                raise RuntimeError(f"Could not reach LLM provider: {exc.reason}") from exc
+                    break
+                except urllib.error.HTTPError as exc:
+                    error_code, error_type = self._safe_error_fields(exc)
+                    retry_values = [self._retry_after_seconds(exc.headers.get(header))
+                        for header in ("Retry-After", "x-ratelimit-reset-tokens")]
+                    retry_after = max((value for value in retry_values if value is not None), default=None)
+                    transient_rate_limit = exc.code == 429 and (
+                        error_code in {"rate_limit_exceeded", "slow_down"} or error_type == "rate_limit_error"
+                    )
+                    if transient_rate_limit and attempt < 2:
+                        delay = retry_after if retry_after is not None else 2 ** attempt
+                        # Respect server token-window resets, which can exceed a
+                        # normal request timeout. Longer windows are surfaced to
+                        # the caller instead of being retried earlier than asked.
+                        if delay <= 420:
+                            logger.warning("Rate limited; retrying after %.1fs", delay)
+                            time.sleep(delay)
+                            continue
+                    details = []
+                    if error_code:
+                        details.append(f"code={error_code}")
+                    if error_type:
+                        details.append(f"type={error_type}")
+                    if retry_after is not None:
+                        details.append(f"retry_after={retry_after:g}s")
+                    for header, label in (("x-ratelimit-limit-tokens", "token_limit"),
+                        ("x-ratelimit-remaining-tokens", "tokens_remaining"),
+                        ("x-ratelimit-reset-tokens", "token_reset")):
+                        value = exc.headers.get(header, "")
+                        if value and re.fullmatch(r"[0-9A-Za-z.]+", value):
+                            details.append(f"{label}={value}")
+                    request_id = exc.headers.get("x-request-id", "")
+                    if request_id and re.fullmatch(r"[A-Za-z0-9_-]{1,80}", request_id):
+                        details.append(f"request_id={request_id}")
+                    suffix = f" ({', '.join(details)})" if details else ""
+                    raise RuntimeError(f"LLM provider returned HTTP {exc.code}{suffix}") from exc
+                except urllib.error.URLError as exc:
+                    raise RuntimeError(f"Could not reach LLM provider: {exc.reason}") from exc
         citations: list[dict[str, str]] = []
+        try:
+            message = body["choices"][0]["message"]
+            content = message["content"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise RuntimeError("LLM provider returned an invalid Chat Completions response") from exc
         if web_search:
-            chunks = []
-            for item in body.get("output", []):
-                if not isinstance(item, dict) or item.get("type") != "message":
-                    continue
-                for part in item.get("content", []):
-                    if not isinstance(part, dict):
-                        continue
-                    if isinstance(part.get("text"), str):
-                        chunks.append(part["text"])
-                    for annotation in part.get("annotations", []):
-                        cited = annotation.get("url_citation", {}) if isinstance(annotation, dict) else {}
-                        if isinstance(cited, dict) and isinstance(cited.get("url"), str):
-                            citations.append({"title": str(cited.get("title", "")), "url": cited["url"]})
-            content = "\n".join(chunks) or body.get("output_text")
-            for item in body.get("output", []):
-                if isinstance(item, dict) and item.get("type") == "web_search_call":
-                    action = item.get("action", {})
-                    for source in action.get("sources", []) if isinstance(action, dict) else []:
-                        if isinstance(source, dict) and isinstance(source.get("url"), str):
-                            citations.append({"title": str(source.get("title", "")), "url": source["url"]})
-        else:
-            try:
-                content = body["choices"][0]["message"]["content"]
-            except (KeyError, IndexError, TypeError) as exc:
-                raise RuntimeError("LLM provider returned an invalid Chat Completions response") from exc
+            for annotation in message.get("annotations", []):
+                cited = annotation.get("url_citation", {}) if isinstance(annotation, dict) else {}
+                if isinstance(cited, dict) and isinstance(cited.get("url"), str):
+                    citations.append({"title": str(cited.get("title", "")), "url": cited["url"]})
         if not isinstance(content, str):
             raise RuntimeError("LLM provider returned no text content")
-        if web_search:
-            usage = body.get("usage") or {}
-            usage = {"prompt_tokens": usage.get("input_tokens", 0),
-                "completion_tokens": usage.get("output_tokens", 0)}
-        else:
-            usage = body.get("usage") or {}
+        usage = body.get("usage") or {}
         try:
             tokens = {"prompt_tokens": max(0, int(usage.get("prompt_tokens", 0))),
                 "completion_tokens": max(0, int(usage.get("completion_tokens", 0)))}
@@ -135,6 +137,11 @@ class ChatCompletionsClient:
         try:
             seconds = float(value)
         except ValueError:
+            duration = re.fullmatch(r"(?:(\d+)h)?(?:(\d+)m)?(?:(\d+(?:\.\d+)?)s)?", value)
+            if duration and any(duration.groups()):
+                hours, minutes, secs = duration.groups()
+                seconds = int(hours or 0) * 3600 + int(minutes or 0) * 60 + float(secs or 0)
+                return max(0.0, seconds)
             try:
                 retry_at = parsedate_to_datetime(value)
                 if retry_at.tzinfo is None:

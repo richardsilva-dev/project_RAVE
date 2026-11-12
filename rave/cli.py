@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import json
+import logging
 from .config import Settings
 from .llm import ChatCompletionsClient
 from .core.hive_core import HiveCore
@@ -18,6 +19,7 @@ async def run_single(client, output_dir, question, scope):
     return {"run_id": run_id, "result_path": str(path), "agent_result": result}
 
 def main() -> None:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     parser = argparse.ArgumentParser(prog="rave", description="RAVE Hive Core 0.1")
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("hive", "single"):
