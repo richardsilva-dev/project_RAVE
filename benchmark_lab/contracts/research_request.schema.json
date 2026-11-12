@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RAVE Benchmark Research Request",
+  "type": "object",
+  "required": ["question_id", "question", "scope", "language", "context", "protocol_version"],
+  "properties": {
+    "question_id": {"type": "string", "minLength": 1},
+    "question": {"type": "string", "minLength": 1},
+    "scope": {"type": "string"},
+    "language": {"type": "string", "default": "pt-BR"},
+    "context": {"type": "object"},
+    "protocol_version": {"type": "string"}
+  },
+  "additionalProperties": false
+}
