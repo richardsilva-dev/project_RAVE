@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from .budget import Budget, BudgetExceeded
 from .client import ChatCompletionsClient
+from .url_utils import canonicalize_url
 
 
 PLANNER_SYSTEM = """You are one independent research analyst. You are not a team and may not delegate,
@@ -92,7 +93,14 @@ class SoloResearchAgent:
                     user=json.dumps({"question": question, "scope": scope, "query": query}, ensure_ascii=False),
                     web_search=True)
                 for citation in response.citations:
-                    citations.setdefault(citation["url"], citation)
+                    canonical = canonicalize_url(citation.get("url", ""))
+                    if canonical:
+                        citations.setdefault(canonical, {
+                            **citation,
+                            "url": canonical,
+                            "canonical_url": canonical,
+                            "original_url": citation.get("url", ""),
+                        })
                 analyzed = self._invoke(budget, kind="analysis", model=self.settings.model,
                     system=ANALYST_SYSTEM,
                     user=json.dumps({"question": question, "scope": scope,
@@ -118,6 +126,20 @@ class SoloResearchAgent:
                 if any(k not in final_output or not isinstance(final_output[k], t)
                        for k, t in required.items()):
                     raise ValueError("Final output does not match required schema")
+                allowed_urls = set(citations)
+                for source in final_output["sources"]:
+                    if not isinstance(source, dict) or not isinstance(source.get("url"), str):
+                        raise ValueError("Final source is missing a URL")
+                    canonical = canonicalize_url(source["url"])
+                    if not canonical or canonical not in allowed_urls:
+                        raise ValueError("Final output contains a source not returned by the search provider")
+                for finding in final_output["findings"]:
+                    if not isinstance(finding, dict):
+                        raise ValueError("Final findings must contain objects")
+                    for source_url in finding.get("source_urls", []):
+                        canonical = canonicalize_url(source_url)
+                        if not canonical or canonical not in allowed_urls:
+                            raise ValueError("Final finding references a URL not returned by the search provider")
             except Exception as exc:
                 status, stop_reason = "PARTIAL", type(exc).__name__
 
