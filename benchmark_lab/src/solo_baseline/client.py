@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 
 
 @dataclass
@@ -12,6 +15,7 @@ class Response:
     content: str
     usage: dict[str, int]
     citations: list[dict]
+    attempts: int = 1
 
 
 class ProviderError(RuntimeError):
@@ -19,7 +23,7 @@ class ProviderError(RuntimeError):
 
 
 class ChatCompletionsClient:
-    """Small, isolated client using the same Chat Completions route as RAVE."""
+    """Isolated client using the Chat Completions route and bounded 429 retries."""
     def __init__(self, api_key: str, base_url: str, timeout_seconds: int,
                  temperature: float):
         if not api_key:
@@ -28,6 +32,25 @@ class ChatCompletionsClient:
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
         self.temperature = temperature
+
+    @staticmethod
+    def _retry_delay(value: str | None) -> float | None:
+        if not value:
+            return None
+        try:
+            return max(0.0, float(value))
+        except ValueError:
+            match = re.fullmatch(r"(?:(\d+)h)?(?:(\d+)m)?(?:(\d+(?:\.\d+)?)s)?", value)
+            if match and any(match.groups()):
+                hours, minutes, seconds = match.groups()
+                return int(hours or 0) * 3600 + int(minutes or 0) * 60 + float(seconds or 0)
+            try:
+                reset_at = parsedate_to_datetime(value)
+                if reset_at.tzinfo is None:
+                    reset_at = reset_at.replace(tzinfo=timezone.utc)
+                return max(0.0, (reset_at - datetime.now(timezone.utc)).total_seconds())
+            except (TypeError, ValueError, OverflowError):
+                return None
 
     def complete(self, *, model: str, system: str, user: str,
                  web_search: bool = False, max_output_tokens: int = 4000) -> tuple[Response, float]:
@@ -49,14 +72,42 @@ class ChatCompletionsClient:
             method="POST",
         )
         started = time.perf_counter()
-        try:
-            with urllib.request.urlopen(request, timeout=self.timeout_seconds) as response:
-                body = json.loads(response.read().decode("utf-8"))
-        except urllib.error.HTTPError as exc:
-            # Never include provider response bodies, headers or credentials in logs.
-            raise ProviderError(f"Provider returned HTTP {exc.code}") from exc
-        except (urllib.error.URLError, TimeoutError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise ProviderError(f"Provider request failed: {type(exc).__name__}") from exc
+        body = None
+        attempts = 0
+        for attempt in range(3):
+            attempts += 1
+            try:
+                with urllib.request.urlopen(request, timeout=self.timeout_seconds) as response:
+                    body = json.loads(response.read().decode("utf-8"))
+                break
+            except urllib.error.HTTPError as exc:
+                error_code = ""
+                error_type = ""
+                try:
+                    error_payload = json.loads(exc.read(64000).decode("utf-8", errors="replace"))
+                    error = error_payload.get("error", {}) if isinstance(error_payload, dict) else {}
+                    if isinstance(error, dict):
+                        error_code = str(error.get("code", ""))
+                        error_type = str(error.get("type", ""))
+                except (ValueError, TypeError, OSError):
+                    pass
+                retry_values = [
+                    self._retry_delay(exc.headers.get("Retry-After")),
+                    self._retry_delay(exc.headers.get("x-ratelimit-reset-tokens")),
+                ]
+                retry_after = max((v for v in retry_values if v is not None), default=None)
+                retryable = exc.code == 429 and (
+                    error_code in {"rate_limit_exceeded", "slow_down"} or
+                    error_type == "rate_limit_error"
+                )
+                if retryable and attempt < 2 and retry_after is not None and retry_after <= 420:
+                    time.sleep(retry_after)
+                    continue
+                raise ProviderError(f"Provider returned HTTP {exc.code}; attempts={attempts}") from exc
+            except (urllib.error.URLError, TimeoutError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+                raise ProviderError(f"Provider request failed: {type(exc).__name__}; attempts={attempts}") from exc
+        if body is None:
+            raise ProviderError(f"Provider request did not complete; attempts={attempts}")
         try:
             message = body["choices"][0]["message"]
             content = message["content"]
@@ -75,8 +126,11 @@ class ChatCompletionsClient:
                         "provenance": "provider_returned_annotation",
                     })
         usage_raw = body.get("usage") or {}
-        usage = {
-            "prompt_tokens": int(usage_raw.get("prompt_tokens", 0) or 0),
-            "completion_tokens": int(usage_raw.get("completion_tokens", 0) or 0),
-        }
-        return Response(content, usage, citations), time.perf_counter() - started
+        try:
+            usage = {
+                "prompt_tokens": int(usage_raw.get("prompt_tokens", 0) or 0),
+                "completion_tokens": int(usage_raw.get("completion_tokens", 0) or 0),
+            }
+        except (TypeError, ValueError, AttributeError) as exc:
+            raise ProviderError("Provider returned invalid token usage") from exc
+        return Response(content, usage, citations, attempts), time.perf_counter() - started
