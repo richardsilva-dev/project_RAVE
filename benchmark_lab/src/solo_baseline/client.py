@@ -19,7 +19,9 @@ class Response:
 
 
 class ProviderError(RuntimeError):
-    pass
+    def __init__(self, message: str, attempts: int = 1):
+        super().__init__(message)
+        self.attempts = attempts
 
 
 class ChatCompletionsClient:
@@ -100,21 +102,23 @@ class ChatCompletionsClient:
                     error_code in {"rate_limit_exceeded", "slow_down"} or
                     error_type == "rate_limit_error"
                 )
-                if retryable and attempt < 2 and retry_after is not None and retry_after <= 420:
-                    time.sleep(retry_after)
-                    continue
-                raise ProviderError(f"Provider returned HTTP {exc.code}; attempts={attempts}") from exc
+                if retryable and attempt < 2:
+                    delay = retry_after if retry_after is not None else float(2 ** attempt)
+                    if delay <= 420:
+                        time.sleep(delay)
+                        continue
+                raise ProviderError(f"Provider returned HTTP {exc.code}; attempts={attempts}", attempts) from exc
             except (urllib.error.URLError, TimeoutError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-                raise ProviderError(f"Provider request failed: {type(exc).__name__}; attempts={attempts}") from exc
+                raise ProviderError(f"Provider request failed: {type(exc).__name__}; attempts={attempts}", attempts) from exc
         if body is None:
-            raise ProviderError(f"Provider request did not complete; attempts={attempts}")
+            raise ProviderError(f"Provider request did not complete; attempts={attempts}", attempts)
         try:
             message = body["choices"][0]["message"]
             content = message["content"]
             if not isinstance(content, str):
                 raise TypeError("content is not text")
         except (KeyError, IndexError, TypeError) as exc:
-            raise ProviderError("Provider response did not contain message text") from exc
+            raise ProviderError("Provider response did not contain message text", attempts) from exc
         citations = []
         if web_search:
             for annotation in message.get("annotations", []):
@@ -132,5 +136,5 @@ class ChatCompletionsClient:
                 "completion_tokens": int(usage_raw.get("completion_tokens", 0) or 0),
             }
         except (TypeError, ValueError, AttributeError) as exc:
-            raise ProviderError("Provider returned invalid token usage") from exc
+            raise ProviderError("Provider returned invalid token usage", attempts) from exc
         return Response(content, usage, citations, attempts), time.perf_counter() - started
