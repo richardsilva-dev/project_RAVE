@@ -16,8 +16,14 @@ class ResearchClient:
 
     def complete(self, system, user, *, web_search=False):
         if system.startswith("You are the RAVE Hive Core synthesis component."):
-            return LLMResponse(json.dumps({"executive_answer": "Integrated answer"}),
-                {"prompt_tokens": 5, "completion_tokens": 3})
+            return LLMResponse(json.dumps({
+                "executive_answer": "Integrated answer",
+                "integrated_analysis": "Integrated analysis",
+                "collective_integration": "Cross-agent integration",
+                "evidence_and_sources": [],
+                "gaps_and_limitations": [],
+                "conclusions": "Conclusion",
+            }), {"prompt_tokens": 5, "completion_tokens": 3})
         if system.startswith("You are the RAVE Hive Core shared web research component."):
             self.search_calls += 1
             return LLMResponse("Shared research from official sources.",
@@ -62,3 +68,26 @@ def test_three_agents_search_share_and_synthesize(tmp_path):
     assert all(len(source["agents"]) == 3 for source in saved["integration"]["web_sources"])
     assert result["final_output"]["executive_answer"] == "Integrated answer"
     assert len(result["final_output"]["web_sources"]) == 2
+
+
+
+def test_invalid_synthesis_marks_run_partial_and_preserves_agent_results(tmp_path):
+    class InvalidSynthesisClient(ResearchClient):
+        def complete(self, system, user, *, web_search=False):
+            if system.startswith("You are the RAVE Hive Core synthesis component."):
+                return LLMResponse('{"executive_answer":"looks plausible but schema is incomplete"}',
+                    {"prompt_tokens": 5, "completion_tokens": 3})
+            return super().complete(system, user, web_search=web_search)
+
+    result = asyncio.run(HiveCore(InvalidSynthesisClient(), str(tmp_path)).run(
+        "Small research question", "Keep it concise"))
+
+    saved = json.loads(Path(result["result_path"]).read_text(encoding="utf-8"))
+    assert result["execution_status"] == "PARTIAL"
+    assert result["synthesis_status"] == "FAILED"
+    assert result["synthesis_error"] == "SynthesisOutputError"
+    assert result["final_output"]["executive_answer"] == ""
+    assert "não existe resposta coletiva validada" in result["final_output"]["gaps_and_limitations"][0]
+    assert len(saved["agent_results"]) == 3
+    assert saved["execution_status"] == "PARTIAL"
+    assert saved["metadata"]["status"] == "PARTIAL"

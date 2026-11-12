@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RAVE Benchmark Research Result",
+  "type": "object",
+  "required": ["run_id", "system_id", "status", "final_output", "sources", "metadata"],
+  "properties": {
+    "run_id": {"type": "string", "minLength": 1},
+    "system_id": {"enum": ["rave", "solo_baseline", "open_deep_research"]},
+    "status": {"enum": ["COMPLETED", "PARTIAL", "INVALID"]},
+    "final_output": {"type": "object"},
+    "sources": {"type": "array", "items": {"type": "object"}},
+    "metadata": {"type": "object"}
+  },
+  "additionalProperties": true
+}

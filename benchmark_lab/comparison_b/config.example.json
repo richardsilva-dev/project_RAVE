@@ -1,0 +1,18 @@
+{
+  "allow_clarification": false,
+  "search_api": "openai",
+  "max_concurrent_research_units": 3,
+  "max_researcher_iterations": 3,
+  "max_react_tool_calls": 5,
+  "max_structured_output_retries": 2,
+  "summarization_model": "openai:gpt-4.1-mini",
+  "summarization_model_max_tokens": 4096,
+  "research_model": "openai:gpt-4.1-mini",
+  "research_model_max_tokens": 4096,
+  "compression_model": "openai:gpt-4.1-mini",
+  "compression_model_max_tokens": 4096,
+  "final_report_model": "openai:gpt-4.1-mini",
+  "final_report_model_max_tokens": 4096,
+  "mcp_config": null,
+  "mcp_prompt": null
+}
