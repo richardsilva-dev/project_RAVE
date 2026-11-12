@@ -1,18 +1,17 @@
 $ErrorActionPreference = "Stop"
 
 $LabRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$RepoRoot = (Resolve-Path (Join-Path $LabRoot "..")).Path
-$SubmoduleRelativePath = "benchmark_lab/comparison_b/upstream/open_deep_research"
-$SubmodulePath = Join-Path $RepoRoot $SubmoduleRelativePath
+if (-not (Test-Path (Join-Path $LabRoot ".git"))) {
+    throw "This is still a staging folder inside project_RAVE. Move the contents of benchmark_lab into the standalone rave-benchmark-lab repository before running this script."
+}
+
+$SubmoduleRelativePath = "comparison_b/upstream/open_deep_research"
+$SubmodulePath = Join-Path $LabRoot $SubmoduleRelativePath
 $UpstreamUrl = "https://github.com/langchain-ai/open_deep_research.git"
 $PinnedSha = "1b7d2e80db9faa586165c60e09096dbbfd483a64"
 
-if (-not (Test-Path (Join-Path $RepoRoot ".git"))) {
-    throw "Run this script from a Git checkout after moving the benchmark_lab folder into the standalone repository."
-}
-
 if (-not (Test-Path $SubmodulePath)) {
-    git -C $RepoRoot submodule add $UpstreamUrl $SubmoduleRelativePath
+    git -C $LabRoot submodule add $UpstreamUrl $SubmoduleRelativePath
     if ($LASTEXITCODE -ne 0) { throw "Could not add the official Open Deep Research submodule." }
 }
 
