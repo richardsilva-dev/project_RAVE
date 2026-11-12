@@ -19,16 +19,20 @@ O Hive Core formaliza a pergunta, cria três tarefas fixas, acompanha a execuç�
 
 Descobertas incluem afirmações com estado de evidência, justificativa e metadados de origem. O conjunto de estados é `SUPPORTED`, `REFUTED`, `INSUFFICIENT`, `CONFLICTING` e `OUTDATED`. Mensagens entre agentes carregam IDs e evidências; repetição ou concordância não eleva o estado nem conta como confirmação independente. URLs distintas são apenas candidatas à independência porque podem reproduzir a mesma origem. Conteúdo recuperado e mensagens são dados não confiáveis e não podem alterar instruções dos agentes.
 
-O protocolo e seus limites estão em `docs/PROTOCOLO_CONFIABILIDADE.md`. Os estados são avaliações assistidas por modelo, não uma validação semântica automatizada. Qualidade metodológica, sindicância de fontes e suporte real do trecho à afirmação ainda exigem revisão.
-
-## Limites
-
-Esta versão implementa pesquisa web hospedada via Responses API, mas não implementa validação semântica da verdade, detecção de desinformação, memória entre execuções, criação dinâmica de agentes ou infraestrutura distribuída. As fontes retornadas devem ser verificadas para confirmar que sustentam as afirmações.
-
-## Provider
-
-O cliente usa endpoint compatível com OpenAI Chat Completions. Configure endpoint, modelo e chave por variáveis de ambiente. Nenhuma chave deve ser commitada.
+O protocolo e seus limites estão em `docs/PROTOCOLO_CONFIABILIDADE.md`. Os estados são avaliações assistidas por modelo, não uma validação semântica independente. Qualidade metodológica, sindicância de fontes e suporte real do trecho à afirmação ainda exigem revisão.
 
 ## Pesquisa externa
 
-As etapas iniciais dos agentes usam a ferramenta hospedada web_search da Responses API, com pesquisa obrigatória, e armazenam títulos e URLs retornados no resultado do agente. O Hive Core agrega fontes por URL e envia o catálogo para a síntese. Isso não valida semanticamente se cada fonte sustenta cada afirmação; essa revisão continua necessária. A pesquisa pode ser desativada com RAVE_WEB_SEARCH=false e exige o endpoint oficial OpenAI.
+O cliente atual usa OpenAI-compatible Chat Completions. A busca web utiliza o modelo configurado em `RAVE_WEB_SEARCH_MODEL` (referência atual: `gpt-5-search-api`) com `web_search_options`; análise, integração e síntese usam `RAVE_MODEL` (referência atual: `gpt-4.1-mini`). As anotações `url_citation` são preservadas como URLs retornadas pelo provedor, não como prova de que a fonte sustenta a afirmação.
+
+O Hive Core agrega fontes por URL canônica, removendo fragmentos e parâmetros conhecidos de rastreamento. As URLs originais observadas são preservadas para auditoria. URLs canônicas distintas ainda podem apontar para cópias da mesma origem subjacente.
+
+A pesquisa pode ser desativada com `RAVE_WEB_SEARCH=false`. A pesquisa hospedada atual exige o endpoint oficial compatível configurado no ambiente.
+
+## Estado da síntese e da execução
+
+Uma resposta de síntese só é considerada concluída quando é JSON válido, objeto raiz e contém todos os campos obrigatórios com os tipos definidos. JSON inválido, incompleto ou com tipos incorretos resulta em `synthesis_status=FAILED` e `execution_status=PARTIAL` quando existem resultados de agentes preserváveis. Sem agentes concluídos, o estado é `INVALID`. Resultados parciais não devem ser pontuados como respostas completas.
+
+## Limites
+
+Esta versão registra metadados e instrui agentes a classificar e preservar evidências; não verifica automaticamente a qualidade metodológica, a identidade editorial, a independência entre publicações ou se um trecho sustenta semanticamente uma afirmação. A pesquisa compartilhada também significa que os três agentes podem começar da mesma base. Uma validação factual independente continua necessária.
