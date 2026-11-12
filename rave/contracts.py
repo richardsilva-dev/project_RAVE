@@ -14,6 +14,11 @@ class Evidence:
     source_url: str = ""
     supporting_excerpt_or_location: str = ""
     accessed_at: str = field(default_factory=now_iso)
+    author_or_institution: str = ""
+    published_at: str = ""
+    updated_at: str = ""
+    source_type: str = ""
+    origin_finding_ids: list[str] = field(default_factory=list)
 
 @dataclass
 class Finding:
@@ -30,6 +35,10 @@ class Finding:
     contributed_by_other_agents: list[str] = field(default_factory=list)
     limitations: list[str] = field(default_factory=list)
     open_questions: list[str] = field(default_factory=list)
+    evidence_status: str = "INSUFFICIENT"
+    status_rationale: str = ""
+    origin_finding_ids: list[str] = field(default_factory=list)
+    independent_source_count: int = 0
 
 @dataclass
 class AgentTask:

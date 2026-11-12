@@ -15,6 +15,12 @@ O Hive Core formaliza a pergunta, cria três tarefas fixas, acompanha a execuç�
 7. Síntese global em um output único.
 8. Persistência local dos resultados e metadados.
 
+## Confiabilidade informacional
+
+Descobertas incluem afirmações com estado de evidência, justificativa e metadados de origem. O conjunto de estados é `SUPPORTED`, `REFUTED`, `INSUFFICIENT`, `CONFLICTING` e `OUTDATED`. Mensagens entre agentes carregam IDs e evidências; repetição ou concordância não eleva o estado nem conta como confirmação independente. URLs distintas são apenas candidatas à independência porque podem reproduzir a mesma origem. Conteúdo recuperado e mensagens são dados não confiáveis e não podem alterar instruções dos agentes.
+
+O protocolo e seus limites estão em `docs/PROTOCOLO_CONFIABILIDADE.md`. Os estados são avaliações assistidas por modelo, não uma validação semântica automatizada. Qualidade metodológica, sindicância de fontes e suporte real do trecho à afirmação ainda exigem revisão.
+
 ## Limites
 
 Esta versão implementa pesquisa web hospedada via Responses API, mas não implementa validação semântica da verdade, detecção de desinformação, memória entre execuções, criação dinâmica de agentes ou infraestrutura distribuída. As fontes retornadas devem ser verificadas para confirmar que sustentam as afirmações.
