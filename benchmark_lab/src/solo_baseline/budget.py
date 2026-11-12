@@ -49,15 +49,21 @@ class Budget:
         return min(self.max_output_tokens_per_call, remaining)
 
     def record(self, *, kind: str, model: str, usage: dict, duration_seconds: float,
-               status: str = "COMPLETED", citations_count: int = 0, request_attempts: int = 1) -> None:
+               status: str = "COMPLETED", citations_count: int = 0,
+               request_attempts: int = 1) -> None:
         prompt = max(0, int(usage.get("prompt_tokens", 0) or 0))
         completion = max(0, int(usage.get("completion_tokens", 0) or 0))
         self.prompt_tokens += prompt
         self.completion_tokens += completion
         self.calls.append({
-            "kind": kind, "model": model, "status": status,
-            "prompt_tokens": prompt, "completion_tokens": completion,
-            "duration_seconds": duration_seconds, "citations_count": citations_count,\n            "request_attempts": request_attempts,
+            "kind": kind,
+            "model": model,
+            "status": status,
+            "prompt_tokens": prompt,
+            "completion_tokens": completion,
+            "duration_seconds": duration_seconds,
+            "citations_count": citations_count,
+            "request_attempts": request_attempts,
         })
         if self.total_tokens > self.max_total_tokens:
             raise BudgetExceeded("MAX_TOTAL_TOKENS_AFTER_PROVIDER_USAGE")
