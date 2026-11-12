@@ -43,7 +43,7 @@ Consulte `docs/ARCHITECTURE.md` e `docs/EXPERIMENT.md` antes de interpretar os o
 
 ## Pesquisa web
 
-O Hive faz uma pesquisa web compartilhada pela OpenAI via Chat Completions e `gpt-5-search-api`. Os três agentes analisam o conjunto citado em suas especialidades, compartilham descobertas e passam pela síntese final. Essa abordagem reduz chamadas repetidas e respeita limites de taxa mais baixos. As citações são guardadas nos resultados para auditoria. Para desativar, defina `RAVE_WEB_SEARCH=false` no `.env`. A pesquisa requer `RAVE_BASE_URL=https://api.openai.com/v1`; endpoints compatíveis podem ser usados com pesquisa desativada. Confira se cada fonte sustenta a afirmação associada.
+O modo padrão `RAVE_RESEARCH_MODE=shared_research` faz uma pesquisa web pela OpenAI via Chat Completions e `gpt-5-search-api`; os três agentes analisam a base compartilhada. Na branch `independent_research`, use `RAVE_RESEARCH_MODE=independent_research` para que cada agente faça sua própria busca especializada. O modo e as fontes ficam registrados em cada execução. Para desativar a pesquisa, defina `RAVE_WEB_SEARCH=false`. A pesquisa requer `RAVE_BASE_URL=https://api.openai.com/v1`; confira se cada fonte sustenta a afirmação associada.
 
 ## Limite de requisições
 

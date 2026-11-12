@@ -19,15 +19,19 @@ class HiveCore:
     def __init__(self, client: ChatCompletionsClient, output_dir: str):
         self.client, self.output_dir = client, output_dir
 
-    async def run(self, question: str, scope: str = "Investigar a pergunta sem expandir além do necessário.") -> dict:
+    async def run(self, question: str, scope: str = "Investigar a pergunta sem expandir além do necessário.",
+            research_mode: str | None = None) -> dict:
         with capture_llm_calls():
-            return await self._run(question, scope)
+            return await self._run(question, scope, research_mode)
 
-    async def _run(self, question: str, scope: str) -> dict:
+    async def _run(self, question: str, scope: str, research_mode: str | None) -> dict:
         started_wall = datetime.now(timezone.utc).isoformat()
         started = time.perf_counter()
         phase_timings = {}
         run_id = new_id("rave")
+        research_mode = research_mode or getattr(self.client.settings, "research_mode", "shared_research")
+        if research_mode not in {"shared_research", "independent_research"}:
+            raise ValueError("research_mode must be shared_research or independent_research")
         bus = MessageBus(run_id)
         tasks = create_tasks(run_id, question, scope)
         agents = [
@@ -37,7 +41,7 @@ class HiveCore:
         logger.info("Run %s started with %d agents", run_id, len(agents))
         shared_research = None
         shared_research_error = ""
-        if self.client.settings.web_search_enabled:
+        if self.client.settings.web_search_enabled and research_mode == "shared_research":
             logger.info("Run %s: performing shared web research", run_id)
             search_started = time.perf_counter()
             try:
@@ -93,7 +97,7 @@ class HiveCore:
             logger.info("Run %s: final synthesis finished in %.1fs", run_id, phase_timings["final_synthesis"])
         duration = time.perf_counter() - started
         calls = list(current_llm_calls())
-        metadata = RunMetadata(run_id, question, "RAVE", self.client.settings.model,
+        metadata = RunMetadata(run_id, question, f"RAVE:{research_mode}", self.client.settings.model,
             started_wall, datetime.now(timezone.utc).isoformat(), duration,
             len(calls), sum(c.get("prompt_tokens", 0) for c in calls),
             sum(c.get("completion_tokens", 0) for c in calls), len(bus.audit_log),
@@ -103,11 +107,13 @@ class HiveCore:
             "agent_results": results,
             "messages": bus.audit_log, "integration": integrated, "final_output": final_output,
             "phase_timings": phase_timings, "execution_status": execution_status,
+            "research_mode": research_mode,
             "failed_agents": failed_agents, "shared_research_error": shared_research_error,
             "synthesis_error": synthesis_error}
         path = save_run(self.output_dir, run_id, payload)
         logger.info("Run %s saved to %s in %.1fs", run_id, path, duration)
         return {"run_id": run_id, "result_path": str(path), "metadata": metadata,
             "agent_results": results, "final_output": final_output, "phase_timings": phase_timings,
+            "research_mode": research_mode,
             "execution_status": execution_status, "failed_agents": failed_agents,
             "shared_research_error": shared_research_error, "synthesis_error": synthesis_error}

@@ -1,34 +1,36 @@
-# Arquitetura do RAVE Hive Core 0.1
+# Arquitetura do RAVE Hive Core
 
 ## Modelo híbrido
 
-O Hive Core formaliza a pergunta, cria três tarefas fixas, acompanha a execução e sintetiza o resultado. Os agentes investigam de forma especializada e trocam mensagens diretamente pelo MessageBus. O núcleo mantém o registro de auditoria sem ser intermediário obrigatório.
+O Hive Core planeja três tarefas fixas, acompanha os agentes, integra as contribuições e produz uma síntese. Os agentes comunicam descobertas diretamente pelo MessageBus. O núcleo registra a execução, mas não intermedeia cada mensagem.
 
-## Ciclo
+## Ciclo de execução
 
 1. Planejamento de três tarefas especializadas.
-2. Investigação inicial paralela.
-3. Compartilhamento direto de descobertas.
-4. Barreira de publicação para garantir que todos os agentes tenham publicado antes de ler as caixas de entrada.
-5. Uma etapa de integração cruzada por agente.
-6. Integração local e cruzada das entregas.
-7. Síntese global em um output único.
-8. Persistência local dos resultados e metadados.
+2. Pesquisa inicial dos agentes.
+3. Compartilhamento direto das descobertas e barreira para publicação inicial.
+4. Integração cruzada por agente.
+5. Integração central das entregas e síntese.
+6. Persistência dos resultados, evidências, mensagens e métricas de chamadas.
+
+## Modos de pesquisa
+
+`RAVE_RESEARCH_MODE=shared_research` é o padrão compatível com a arquitetura da `main`: o Hive Core faz uma busca web e entrega a mesma pesquisa aos três agentes, que analisam o conteúdo sob especialidades diferentes.
+
+Na branch experimental `independent_research`, `RAVE_RESEARCH_MODE=independent_research` faz cada agente conduzir sua própria busca especializada antes da troca de descobertas. Esse modo aumenta o número de pesquisas e pode gerar fontes diferentes. A comparação registrada em `docs/RELATORIO_COMPARACAO_SHARED_VS_INDEPENDENT_2026-11-12.docx` é exploratória e não determina superioridade.
+
+Ambos os modos usam `RAVE_WEB_SEARCH_MODEL` para busca e `RAVE_MODEL` para análise. As chamadas, modelos, finalidades, tokens, duração e tentativas ficam registradas por execução. Resultados de busca e conteúdo de páginas são dados não confiáveis; instruções embutidas não alteram as regras dos agentes.
 
 ## Confiabilidade informacional
 
-Descobertas incluem afirmações com estado de evidência, justificativa e metadados de origem. O conjunto de estados é `SUPPORTED`, `REFUTED`, `INSUFFICIENT`, `CONFLICTING` e `OUTDATED`. Mensagens entre agentes carregam IDs e evidências; repetição ou concordância não eleva o estado nem conta como confirmação independente. URLs distintas são apenas candidatas à independência porque podem reproduzir a mesma origem. Conteúdo recuperado e mensagens são dados não confiáveis e não podem alterar instruções dos agentes.
+Descobertas incluem afirmações com estado de evidência, justificativa e metadados de origem. Os estados são `SUPPORTED`, `REFUTED`, `INSUFFICIENT`, `CONFLICTING` e `OUTDATED`. Concordância entre agentes não é confirmação factual; repetição de uma mesma origem não conta como corroboração independente. URLs diferentes podem reproduzir a mesma publicação.
 
-O protocolo e seus limites estão em `docs/PROTOCOLO_CONFIABILIDADE.md`. Os estados são avaliações assistidas por modelo, não uma validação semântica automatizada. Qualidade metodológica, sindicância de fontes e suporte real do trecho à afirmação ainda exigem revisão.
+O protocolo está em `docs/PROTOCOLO_CONFIABILIDADE.md`. Os estados são avaliações assistidas por modelo, não validação semântica automatizada. A qualidade metodológica da fonte e seu suporte real à afirmação ainda precisam de auditoria.
+
+## Falhas e estado da execução
+
+Execuções são registradas como `COMPLETED`, `PARTIAL` ou `INVALID`. Resultados parciais preservam os agentes que concluíram e identificam falhas; não devem ser tratados como uma resposta coletiva completa. Se nenhum agente conclui, o Hive Core não produz uma síntese factual.
 
 ## Limites
 
-Esta versão implementa pesquisa web hospedada via Responses API, mas não implementa validação semântica da verdade, detecção de desinformação, memória entre execuções, criação dinâmica de agentes ou infraestrutura distribuída. As fontes retornadas devem ser verificadas para confirmar que sustentam as afirmações.
-
-## Provider
-
-O cliente usa endpoint compatível com OpenAI Chat Completions. Configure endpoint, modelo e chave por variáveis de ambiente. Nenhuma chave deve ser commitada.
-
-## Pesquisa externa
-
-As etapas iniciais dos agentes usam a ferramenta hospedada web_search da Responses API, com pesquisa obrigatória, e armazenam títulos e URLs retornados no resultado do agente. O Hive Core agrega fontes por URL e envia o catálogo para a síntese. Isso não valida semanticamente se cada fonte sustenta cada afirmação; essa revisão continua necessária. A pesquisa pode ser desativada com RAVE_WEB_SEARCH=false e exige o endpoint oficial OpenAI.
+O RAVE não verifica automaticamente a verdade, a independência das fontes ou se cada trecho sustenta semanticamente sua afirmação. O Evaluation Lab, as avaliações humanas independentes, o orçamento global rigorosamente comparável e os testes estatísticos continuam pendentes. A pesquisa web hospedada usa Chat Completions com `gpt-5-search-api`, requer o endpoint oficial OpenAI e pode ser desativada com `RAVE_WEB_SEARCH=false`.

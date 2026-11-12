@@ -15,8 +15,20 @@ def integrate(results: list[AgentResult]) -> dict:
     for result in results:
         for source in result.web_sources:
             if source.source_url:
-                sources.setdefault(source.source_url, {"title": source.source_title, "url": source.source_url,
-                    "accessed_at": source.accessed_at, "agents": []})["agents"].append(result.agent_id)
+                item = sources.setdefault(source.source_url, {"title": source.source_title, "url": source.source_url,
+                    "accessed_at": source.accessed_at, "agents": []})
+                if result.agent_id not in item["agents"]:
+                    item["agents"].append(result.agent_id)
+        for finding in result.findings:
+            for evidence in finding.evidence:
+                if not evidence.source_url:
+                    continue
+                item = sources.setdefault(evidence.source_url, {"title": evidence.source_title,
+                    "url": evidence.source_url, "accessed_at": evidence.accessed_at, "agents": []})
+                if not item.get("title") and evidence.source_title:
+                    item["title"] = evidence.source_title
+                if result.agent_id not in item["agents"]:
+                    item["agents"].append(result.agent_id)
     # Count distinct cited URLs as a reproducible upper-bound. Different URLs may
     # still syndicate the same underlying report, so this is not proof of independence.
     for finding in findings:

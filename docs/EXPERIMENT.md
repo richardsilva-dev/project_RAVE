@@ -13,3 +13,7 @@ Prepare mapa de referência e rubrica independente antes de avaliar os outputs. 
 3. O ganho observado justifica os tokens, a latência e a complexidade adicionais?
 
 O modo `single` usa a pesquisa compartilhada e o mesmo modelo de raciocínio e contrato JSON do Hive. Isso melhora o controle inicial, mas não iguala o orçamento global: a colmeia faz mais chamadas. Defina e aplique um orçamento total comparável antes de usar custos/latência para concluir superioridade. Nas execuções, confira `metadata.calls`, incluindo modelo, finalidade, tokens, duração, estado e tentativas, e exclua execuções `PARTIAL`/`INVALID` de comparações de respostas completas.
+
+## Comparação de estratégias de pesquisa
+
+O modo padrão `shared_research` reproduz o fluxo centralizado da `main`. Na branch experimental, `RAVE_RESEARCH_MODE=independent_research` faz uma busca por agente. Relatórios devem usar a mesma pergunta e escopo, registrar os dois modos, conferir as fontes nos achados e separar eficiência operacional de qualidade factual. A comparação exploratória de 12/11/2026 está em `docs/RELATORIO_COMPARACAO_SHARED_VS_INDEPENDENT_2026-11-12.docx`.
