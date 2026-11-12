@@ -53,9 +53,10 @@ class SoloResearchAgent:
                 model=model, system=system, user=user,
                 web_search=web_search, max_output_tokens=output_cap,
             )
-        except Exception:
+        except Exception as exc:
             budget.record(kind=kind, model=model, usage={},
-                          duration_seconds=time.perf_counter() - started, status="FAILED")
+                          duration_seconds=time.perf_counter() - started, status="FAILED",
+                          request_attempts=getattr(exc, "attempts", 1))
             raise
         budget.record(kind=kind, model=model, usage=response.usage,
                       duration_seconds=duration, citations_count=len(response.citations),
