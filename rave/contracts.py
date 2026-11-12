@@ -20,6 +20,7 @@ class Evidence:
     source_type: str = ""
     origin_finding_ids: list[str] = field(default_factory=list)
     citation_provenance: str = "model_reported"
+    citation_origin_agent_ids: list[str] = field(default_factory=list)
 
 @dataclass
 class Finding:
@@ -74,6 +75,7 @@ class AgentResult:
     discarded_findings: list[dict] = field(default_factory=list)
     refinement_status: str = "NOT_RUN"
     refinement_changes: list[dict] = field(default_factory=list)
+    failure_type: str = ""
 
 @dataclass
 class AgentMessage:

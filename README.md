@@ -2,7 +2,7 @@
 
 Protótipo experimental de inteligência coletiva com três agentes especializados, coordenação híbrida e comparação com um agente individual.
 
-> Status: primeira implementação em construção e ainda não validada em execução real. A hipótese de superioridade da colmeia permanece aberta.
+> Status: protótipo exercitado em execuções reais exploratórias. As rodadas v3 independente e compartilhada e o baseline individual foram concluídos. A rodada independente v2 terminou parcial por timeout. Ainda não há avaliação factual cega que demonstre superioridade de qualquer estratégia.
 
 ## Escopo implementado
 
@@ -36,6 +36,14 @@ rave single "Pergunta a investigar"
 rave hive "Pergunta a investigar"
 pytest
 ```
+
+Para comparar o Hive com o agente individual usando exatamente a pesquisa de uma execução compartilhada concluída, reutilize seu ID:
+
+```bash
+rave single "Pergunta a investigar" --scope "Escopo idêntico ao da execução Hive" --research-run-id rave-ID_DA_EXECUCAO
+```
+
+O comando valida se o ID corresponde a uma execução `shared_research` concluída com a mesma pergunta e escopo. A pesquisa comum já registrada nessa execução não é repetida. Seu custo e duração ficam no registro Hive de origem; as chamadas do baseline individual ficam no registro `single`.
 
 Os resultados são salvos como JSON em `data/runs/`. O cliente usa endpoint compatível com OpenAI Chat Completions. As investigações usam o modelo de pesquisa `gpt-5-search-api`; as fontes citadas são registradas para auditoria. Verifique fontes e referências antes de pontuar os resultados.
 

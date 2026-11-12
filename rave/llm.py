@@ -14,6 +14,7 @@ from .config import Settings
 
 logger = logging.getLogger(__name__)
 _active_call_log: contextvars.ContextVar[list[dict[str, Any]] | None] = contextvars.ContextVar("rave_call_log", default=None)
+_active_agent_id: contextvars.ContextVar[str | None] = contextvars.ContextVar("rave_agent_id", default=None)
 
 class capture_llm_calls:
     """Isolate API call telemetry to one async run (also inherited by to_thread)."""
@@ -27,6 +28,18 @@ class capture_llm_calls:
 
 def current_llm_calls() -> list[dict[str, Any]]:
     return _active_call_log.get() or []
+
+class llm_agent_context:
+    """Attach a stable agent/component id to calls made in this async context."""
+    def __init__(self, agent_id: str):
+        self.agent_id = agent_id
+
+    def __enter__(self):
+        self.token = _active_agent_id.set(self.agent_id)
+        return self
+
+    def __exit__(self, *_):
+        _active_agent_id.reset(self.token)
 
 @dataclass
 class LLMResponse:
@@ -118,7 +131,13 @@ class ChatCompletionsClient:
                 except urllib.error.URLError as exc:
                     self._record_call(system, user, web_search, call_started, attempts,
                         {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
+                    if isinstance(exc.reason, TimeoutError):
+                        raise TimeoutError("LLM request timed out") from exc
                     raise RuntimeError(f"Could not reach LLM provider: {exc.reason}") from exc
+                except TimeoutError as exc:
+                    self._record_call(system, user, web_search, call_started, attempts,
+                        {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
+                    raise TimeoutError("LLM request timed out") from exc
         citations: list[dict[str, str]] = []
         try:
             message = body["choices"][0]["message"]
@@ -155,7 +174,8 @@ class ChatCompletionsClient:
             call_log.append({"model": self.settings.web_search_model if web_search else self.settings.model,
                 "purpose": self._purpose(system, user, web_search), "status": status,
                 "prompt_tokens": tokens["prompt_tokens"], "completion_tokens": tokens["completion_tokens"],
-                "duration_seconds": time.perf_counter() - started, "request_attempts": attempts})
+                "duration_seconds": time.perf_counter() - started, "request_attempts": attempts,
+                "agent_id": _active_agent_id.get() or "hive-core"})
 
     @staticmethod
     def _purpose(system: str, user: str, web_search: bool) -> str:

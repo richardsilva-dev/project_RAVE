@@ -16,9 +16,13 @@ class IndependentResearchClient:
     settings = SimpleNamespace(model="reasoning-model", web_search_enabled=True,
         research_mode="independent_research")
 
-    def __init__(self, fail_search_role=None):
+    def __init__(self, fail_search_role=None, fail_refinement_agent=None, share_peer_evidence=False,
+            invalid_refinement_agent=None):
         self.calls = []
         self.fail_search_role = fail_search_role
+        self.fail_refinement_agent = fail_refinement_agent
+        self.share_peer_evidence = share_peer_evidence
+        self.invalid_refinement_agent = invalid_refinement_agent
 
     def complete(self, system, user, *, web_search=False):
         prompt = json.loads(user)
@@ -26,6 +30,8 @@ class IndependentResearchClient:
         if system.startswith("You are the RAVE Hive Core synthesis component."):
             return LLMResponse(json.dumps({"executive_answer": "answer", "evidence_and_sources": []}),
                 {"prompt_tokens": 3, "completion_tokens": 2})
+        if system.startswith("You repair JSON formatting only"):
+            return LLMResponse("not valid json", {"prompt_tokens": 1, "completion_tokens": 1})
         if web_search:
             role = prompt["role"]
             if role == self.fail_search_role:
@@ -37,6 +43,15 @@ class IndependentResearchClient:
             agent = system.split("You are RAVE Agent ", 1)[1].split(":", 1)[0]
             if prompt["phase"] == "cross_agent_integration":
                 initial = prompt["your_initial_findings"]
+                own_agent_id = initial[0]["agent_id"] if initial else ""
+                if own_agent_id == self.fail_refinement_agent:
+                    raise TimeoutError("simulated refinement timeout")
+                if own_agent_id == self.invalid_refinement_agent:
+                    return LLMResponse("not valid json", {"prompt_tokens": 1, "completion_tokens": 1})
+                if self.share_peer_evidence and prompt["peer_contributions"]:
+                    peer = json.loads(prompt["peer_contributions"][0]["content"])
+                    if peer.get("evidence"):
+                        initial[0]["evidence"].append(peer["evidence"][0])
                 payload = {"summary": f"Integrated {agent}", "findings": initial,
                     "limitations": [], "open_questions": [],
                     "change_log": [{"finding_id": initial[0]["finding_id"], "action": "retained", "reason": "No change."}]}
@@ -105,3 +120,56 @@ def test_independent_research_failure_is_saved_as_partial(tmp_path):
     assert saved["failed_agents"] == [{"agent_id": "agent-02", "error_type": "RuntimeError"}]
     assert any("execução parcial" in item.lower()
         for item in result["final_output"]["gaps_and_limitations"])
+
+
+def test_refinement_timeout_preserves_initial_findings_and_marks_hive_partial(tmp_path):
+    client = IndependentResearchClient(fail_refinement_agent="agent-03")
+    result = asyncio.run(HiveCore(client, str(tmp_path)).run("Question?", "Scope"))
+    saved = json.loads(Path(result["result_path"]).read_text(encoding="utf-8"))
+    agent = next(item for item in saved["agent_results"] if item["agent_id"] == "agent-03")
+
+    assert agent["status"] == "PARTIAL"
+    assert agent["refinement_status"] == "FAILED_PRESERVED_INITIAL"
+    assert agent["failure_type"] == "TimeoutError"
+    assert len(agent["findings"]) == len(agent["initial_findings"]) == 1
+    assert saved["execution_status"] == result["execution_status"] == "PARTIAL"
+    assert saved["partial_agents"] == [{"agent_id": "agent-03",
+        "refinement_status": "FAILED_PRESERVED_INITIAL", "error_type": "TimeoutError"}]
+    assert len(saved["integration"]["findings"]) >= 3
+
+
+def test_invalid_refinement_json_is_also_reported_as_partial(tmp_path):
+    client = IndependentResearchClient(invalid_refinement_agent="agent-03")
+    result = asyncio.run(HiveCore(client, str(tmp_path)).run("Question?", "Scope"))
+    saved = json.loads(Path(result["result_path"]).read_text(encoding="utf-8"))
+    agent = next(item for item in saved["agent_results"] if item["agent_id"] == "agent-03")
+
+    assert agent["status"] == "PARTIAL"
+    assert agent["refinement_status"] == "FAILED_PRESERVED_INITIAL"
+    assert len(agent["findings"]) == len(agent["initial_findings"]) == 1
+    assert saved["execution_status"] == "PARTIAL"
+    assert saved["partial_agents"][0]["agent_id"] == "agent-03"
+
+
+def test_peer_provider_citation_provenance_survives_refinement():
+    async def scenario():
+        client = IndependentResearchClient(share_peer_evidence=True)
+        bus = MessageBus("run-peer-provenance")
+        tasks = create_tasks("run-peer-provenance", "Question?", "Scope")
+        results = await asyncio.gather(*(agent.run(task)
+            for agent, task in zip(make_agents(client, bus), tasks)))
+
+        received_peer_provider_evidence = []
+        for result in results:
+            own_urls = {item.source_url for item in result.web_sources}
+            for finding in result.findings:
+                for evidence in finding.evidence:
+                    if evidence.source_url.startswith("https://tool.example/") and evidence.source_url not in own_urls:
+                        received_peer_provider_evidence.append(evidence)
+        assert received_peer_provider_evidence
+        assert all(item.citation_provenance == "provider_returned"
+            for item in received_peer_provider_evidence)
+        assert all(item.citation_origin_agent_ids for item in received_peer_provider_evidence)
+        assert all(item.origin_finding_ids for item in received_peer_provider_evidence)
+
+    asyncio.run(scenario())

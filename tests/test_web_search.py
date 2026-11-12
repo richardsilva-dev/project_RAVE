@@ -1,10 +1,11 @@
+import asyncio
 import io
 import json
 import urllib.error
 from unittest.mock import patch
 
 from rave.config import Settings
-from rave.llm import ChatCompletionsClient
+from rave.llm import ChatCompletionsClient, capture_llm_calls, llm_agent_context
 
 
 class FakeHTTPResponse:
@@ -41,6 +42,27 @@ def test_chat_completions_web_search_returns_text_sources_and_usage():
     assert response.content == "{\"findings\": []}"
     assert response.citations == [{"title": "Source", "url": "https://example.org/source"}]
     assert response.usage == {"prompt_tokens": 12, "completion_tokens": 6}
+
+
+def test_timeout_is_recorded_as_failed_call_with_agent_and_attempts():
+    settings = Settings("test-key", "https://api.openai.com/v1", "chat-model")
+    client = ChatCompletionsClient(settings)
+    async def call_in_agent_context():
+        with capture_llm_calls() as calls, llm_agent_context("agent-03"):
+            with patch("rave.llm.urllib.request.urlopen", side_effect=TimeoutError("socket timed out")):
+                try:
+                    await asyncio.to_thread(client.complete, "system", "question")
+                except TimeoutError as exc:
+                    assert str(exc) == "LLM request timed out"
+                else:
+                    raise AssertionError("Expected the timeout to propagate")
+            return list(calls)
+    calls = asyncio.run(call_in_agent_context())
+    assert len(calls) == 1
+    assert calls[0]["status"] == "FAILED"
+    assert calls[0]["agent_id"] == "agent-03"
+    assert calls[0]["request_attempts"] == 1
+    assert calls[0]["duration_seconds"] >= 0
 
 
 def test_quota_error_exposes_safe_code_without_echoing_provider_message():

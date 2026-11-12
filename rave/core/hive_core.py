@@ -62,7 +62,10 @@ class HiveCore:
         results = [outcome for outcome in outcomes if not isinstance(outcome, BaseException)]
         failed_agents = [{"agent_id": agent.agent_id, "error_type": type(outcome).__name__}
             for agent, outcome in zip(agents, outcomes) if isinstance(outcome, BaseException)]
-        execution_status = "COMPLETED" if not failed_agents and not shared_research_error else (
+        partial_agents = [{"agent_id": result.agent_id, "refinement_status": result.refinement_status,
+            "error_type": result.failure_type}
+            for result in results if result.status != "COMPLETED"]
+        execution_status = "COMPLETED" if not failed_agents and not partial_agents and not shared_research_error else (
             "PARTIAL" if results else "INVALID")
         phase_timings["agent_research_and_peer_integration"] = time.perf_counter() - investigation_started
         logger.info("Run %s: agents finished in %.1fs; integrating findings", run_id,
@@ -89,6 +92,9 @@ class HiveCore:
             if failed_agents:
                 final_output.setdefault("gaps_and_limitations", []).append(
                     "Execução parcial: um ou mais agentes falharam. Esta saída não representa uma execução coletiva completa.")
+            if partial_agents:
+                final_output.setdefault("gaps_and_limitations", []).append(
+                    "Execução parcial: um ou mais agentes preservaram apenas os achados iniciais após falha no refinamento.")
             if shared_research_error:
                 final_output.setdefault("gaps_and_limitations", []).append(
                     "A busca compartilhada falhou; a execução foi preservada como modo compartilhado e os agentes não fizeram buscas individuais.")
@@ -111,7 +117,8 @@ class HiveCore:
             "messages": bus.audit_log, "integration": integrated, "final_output": final_output,
             "phase_timings": phase_timings, "execution_status": execution_status,
             "research_mode": research_mode,
-            "failed_agents": failed_agents, "shared_research_error": shared_research_error,
+            "failed_agents": failed_agents, "partial_agents": partial_agents,
+            "shared_research_error": shared_research_error,
             "synthesis_error": synthesis_error}
         path = save_run(self.output_dir, run_id, payload)
         logger.info("Run %s saved to %s in %.1fs", run_id, path, duration)
@@ -119,4 +126,5 @@ class HiveCore:
             "agent_results": results, "final_output": final_output, "phase_timings": phase_timings,
             "research_mode": research_mode,
             "execution_status": execution_status, "failed_agents": failed_agents,
+            "partial_agents": partial_agents,
             "shared_research_error": shared_research_error, "synthesis_error": synthesis_error}
