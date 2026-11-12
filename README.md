@@ -12,6 +12,9 @@ Protótipo experimental de inteligência coletiva com três agentes especializad
 - Uma etapa de integração cruzada após a investigação inicial.
 - Baseline de agente único e persistência JSON dos resultados.
 - Testes automatizados dos contratos iniciais e da comunicação.
+- Registro experimental por chamada, com modelo, finalidade, tokens, duração e tentativas; execuções parciais/inválidas são identificadas explicitamente.
+- Baseline individual com pesquisa compartilhada, mesmo modelo de raciocínio e contrato de saída do Hive. Um orçamento global igual ainda precisa ser definido antes de comparar eficiência.
+- Protocolo de confiabilidade informacional e rastreabilidade em `docs/PROTOCOLO_CONFIABILIDADE.md`.
 
 ## Requisitos e instalação
 

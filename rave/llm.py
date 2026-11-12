@@ -2,6 +2,7 @@ import json
 import re
 import logging
 import time
+import contextvars
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -12,6 +13,20 @@ from typing import Any
 from .config import Settings
 
 logger = logging.getLogger(__name__)
+_active_call_log: contextvars.ContextVar[list[dict[str, Any]] | None] = contextvars.ContextVar("rave_call_log", default=None)
+
+class capture_llm_calls:
+    """Isolate API call telemetry to one async run (also inherited by to_thread)."""
+    def __enter__(self):
+        self.calls: list[dict[str, Any]] = []
+        self.token = _active_call_log.set(self.calls)
+        return self.calls
+
+    def __exit__(self, *_):
+        _active_call_log.reset(self.token)
+
+def current_llm_calls() -> list[dict[str, Any]]:
+    return _active_call_log.get() or []
 
 @dataclass
 class LLMResponse:
@@ -26,6 +41,8 @@ class ChatCompletionsClient:
         self._request_semaphore = BoundedSemaphore(settings.max_concurrent_requests)
 
     def complete(self, system: str, user: str, *, web_search: bool = False) -> LLMResponse:
+        call_started = time.perf_counter()
+        attempts = 0
         if not self.settings.api_key:
             raise RuntimeError("RAVE_API_KEY is missing. Configure it in your environment.")
         if len(system) > 100_000 or len(user) > 1_000_000:
@@ -51,9 +68,15 @@ class ChatCompletionsClient:
             method="POST")
         with self._request_semaphore:
             for attempt in range(3):
+                attempts += 1
                 try:
                     with urllib.request.urlopen(request, timeout=self.settings.timeout_seconds) as response:
-                        body: dict[str, Any] = json.loads(response.read().decode("utf-8"))
+                        try:
+                            body: dict[str, Any] = json.loads(response.read().decode("utf-8"))
+                        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                            self._record_call(system, user, web_search, call_started, attempts,
+                                {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
+                            raise RuntimeError("LLM provider returned an invalid JSON response") from exc
                     break
                 except urllib.error.HTTPError as exc:
                     error_code, error_type = self._safe_error_fields(exc)
@@ -89,14 +112,20 @@ class ChatCompletionsClient:
                     if request_id and re.fullmatch(r"[A-Za-z0-9_-]{1,80}", request_id):
                         details.append(f"request_id={request_id}")
                     suffix = f" ({', '.join(details)})" if details else ""
+                    self._record_call(system, user, web_search, call_started, attempts,
+                        {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
                     raise RuntimeError(f"LLM provider returned HTTP {exc.code}{suffix}") from exc
                 except urllib.error.URLError as exc:
+                    self._record_call(system, user, web_search, call_started, attempts,
+                        {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
                     raise RuntimeError(f"Could not reach LLM provider: {exc.reason}") from exc
         citations: list[dict[str, str]] = []
         try:
             message = body["choices"][0]["message"]
             content = message["content"]
         except (KeyError, IndexError, TypeError) as exc:
+            self._record_call(system, user, web_search, call_started, attempts,
+                {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
             raise RuntimeError("LLM provider returned an invalid Chat Completions response") from exc
         if web_search:
             for annotation in message.get("annotations", []):
@@ -104,15 +133,45 @@ class ChatCompletionsClient:
                 if isinstance(cited, dict) and isinstance(cited.get("url"), str):
                     citations.append({"title": str(cited.get("title", "")), "url": cited["url"]})
         if not isinstance(content, str):
+            self._record_call(system, user, web_search, call_started, attempts,
+                {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
             raise RuntimeError("LLM provider returned no text content")
         usage = body.get("usage") or {}
         try:
             tokens = {"prompt_tokens": max(0, int(usage.get("prompt_tokens", 0))),
                 "completion_tokens": max(0, int(usage.get("completion_tokens", 0)))}
         except (TypeError, ValueError, AttributeError) as exc:
+            self._record_call(system, user, web_search, call_started, attempts,
+                {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
             raise RuntimeError("LLM provider returned invalid usage metadata") from exc
         unique_citations = list({citation["url"]: citation for citation in citations}.values())
+        self._record_call(system, user, web_search, call_started, attempts, tokens, "COMPLETED")
         return LLMResponse(content, tokens, unique_citations)
+
+    def _record_call(self, system: str, user: str, web_search: bool, started: float,
+            attempts: int, tokens: dict[str, int], status: str) -> None:
+        call_log = _active_call_log.get()
+        if call_log is not None:
+            call_log.append({"model": self.settings.web_search_model if web_search else self.settings.model,
+                "purpose": self._purpose(system, user, web_search), "status": status,
+                "prompt_tokens": tokens["prompt_tokens"], "completion_tokens": tokens["completion_tokens"],
+                "duration_seconds": time.perf_counter() - started, "request_attempts": attempts})
+
+    @staticmethod
+    def _purpose(system: str, user: str, web_search: bool) -> str:
+        if "format_repair" in user:
+            return "json_repair"
+        if "shared web research component" in system:
+            return "shared_web_research"
+        if "synthesis component" in system:
+            return "final_synthesis"
+        if "cross_agent_integration" in user:
+            return "cross_agent_refinement"
+        if "single_agent_baseline" in user:
+            return "single_agent_analysis"
+        if "RAVE Agent " in system:
+            return "agent_initial_research" if web_search else "agent_initial_analysis"
+        return "web_search" if web_search else "llm_completion"
 
     @staticmethod
     def _safe_error_fields(exc: urllib.error.HTTPError) -> tuple[str, str]:

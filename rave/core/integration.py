@@ -10,8 +10,7 @@ def integrate(results: list[AgentResult]) -> dict:
         normalized = " ".join(finding.claim.lower().split())
         if normalized:
             by_claim[normalized].append(finding.agent_id)
-    overlaps = [{"claim": claim, "agents": agents, "agreement_is_not_verification": True}
-        for claim, agents in by_claim.items() if len(agents) > 1]
+    overlaps = [{"claim": claim, "agents": agents} for claim, agents in by_claim.items() if len(agents) > 1]
     sources = {}
     for result in results:
         for source in result.web_sources:

@@ -60,3 +60,7 @@ Pergunta usada: “Quais são os benefícios, riscos e recomendações atuais pa
 
 - [Pesquisa web da API OpenAI](https://developers.openai.com/api/docs/guides/tools-web-search)
 - [Limites de taxa da API OpenAI](https://developers.openai.com/api/docs/guides/rate-limits)
+
+## Errata de contabilização
+
+O JSON histórico guarda `metadata.prompt_tokens=49.607` e `metadata.completion_tokens=26.160`, mas esses totais não incluem a chamada de pesquisa compartilhada. O registro da pesquisa contém mais 16.650 tokens de entrada e 2.333 de saída. Assim, a soma observável das chamadas é **66.257 tokens de entrada + 28.493 de saída = 94.750 tokens**, incluindo a pesquisa compartilhada. A soma anterior de 75.767 corresponde aos metadados incompletos e deve ser desconsiderada. O total de oito chamadas lógicas permanece consistente com as etapas registradas, mas o arquivo histórico não guarda duração/modelo/tokens por chamada nem tentativas de retry; esses detalhes não podem ser reconstruídos com segurança.

@@ -67,6 +67,11 @@ class AgentResult:
     usage: dict[str, int] = field(default_factory=dict)
     web_sources: list[Evidence] = field(default_factory=list)
     phase_timings: dict[str, float] = field(default_factory=dict)
+    initial_findings: list[Finding] = field(default_factory=list)
+    peer_contributions: list[dict] = field(default_factory=list)
+    discarded_findings: list[dict] = field(default_factory=list)
+    refinement_status: str = "NOT_RUN"
+    refinement_changes: list[dict] = field(default_factory=list)
 
 @dataclass
 class AgentMessage:
@@ -93,6 +98,9 @@ class RunMetadata:
     prompt_tokens: int = 0
     completion_tokens: int = 0
     messages_count: int = 0
+    status: str = "COMPLETED"
+    request_attempts: int = 0
+    calls: list[dict] = field(default_factory=list)
 
 def to_dict(value):
     if hasattr(value, "__dataclass_fields__"):
