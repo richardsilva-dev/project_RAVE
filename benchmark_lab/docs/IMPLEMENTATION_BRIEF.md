@@ -9,7 +9,7 @@ This folder is staged in the private `project_RAVE` repository on branch `benchm
 - Standalone SOLO Python package with its own settings and API key namespace.
 - One sequential researcher with planning, gap-directed follow-up searches, analysis and final synthesis; no delegation or inter-agent messaging.
 - Model/search call budget, runtime/token accounting, per-call telemetry and bounded 429 retry behavior.
-- Provider-returned citation collection, URL canonicalization and final citation checks against provider-returned URLs.
+- Provider-returned citation collection, URL canonicalization, final citation checks against provider-returned URLs and rejection of invented final references.
 - JSON request/result/metadata schemas.
 - RAVE, SOLO and explicit Open Deep Research result adapters that preserve native metadata and do not promote partial runs.
 - Comparison A and B protocols, architecture, security policy and implementation brief.
