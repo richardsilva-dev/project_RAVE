@@ -17,9 +17,9 @@ Atualizado em 12/11/2026. Este documento distingue código, testes automatizados
 
 ## Evidência e validação
 
-Os testes foram ampliados para cobrir JSON de síntese inválido/incompleto, classificação de execução parcial e deduplicação de variantes de URL. A execução desses testes precisa ser confirmada pelo GitHub Actions após a abertura do pull request. A integração disponível nesta sessão não retornou runs para o commit base; isso não equivale a um status de sucesso ou falha.
+Os testes foram ampliados para cobrir JSON de síntese inválido/incompleto, classificação de execução parcial e deduplicação de variantes de URL. O GitHub Actions executou o workflow `tests` (run #18) com **32 testes aprovados** e o workflow `benchmark-lab-tests` (run #30) com **10 testes aprovados**, ambos com conclusão `success`, no commit atual da branch desta PR.
 
-Nenhuma nova execução real com API foi realizada nesta etapa. Não inferir qualidade de pesquisa a partir dos testes unitários.
+Nenhuma nova execução real com API foi realizada nesta etapa. Não inferir qualidade de pesquisa a partir dos testes unitários. A aprovação do CI confirma instalação e testes automatizados, não compatibilidade real dos modelos, qualidade das respostas ou custo financeiro.
 
 ## Pendências antes do benchmark formal
 
