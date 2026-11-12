@@ -1,24 +1,44 @@
 $ErrorActionPreference = "Stop"
 
-$UpstreamPath = Join-Path $PSScriptRoot "..\comparison_b\upstream\open_deep_research"
-if (-not (Test-Path (Join-Path $PSScriptRoot "..\.gitmodules"))) {
-    throw "This is a staging copy. Move benchmark_lab contents to the standalone rave-benchmark-lab repository first, then add the upstream project as a Git submodule."
-}
-if (-not (Test-Path $UpstreamPath)) {
-    throw "Open Deep Research submodule is missing. Add it from the official LangChain repository and pin a full commit SHA before setup."
+$LabRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$RepoRoot = (Resolve-Path (Join-Path $LabRoot "..")).Path
+$SubmoduleRelativePath = "benchmark_lab/comparison_b/upstream/open_deep_research"
+$SubmodulePath = Join-Path $RepoRoot $SubmoduleRelativePath
+$UpstreamUrl = "https://github.com/langchain-ai/open_deep_research.git"
+$PinnedSha = "1b7d2e80db9faa586165c60e09096dbbfd483a64"
+
+if (-not (Test-Path (Join-Path $RepoRoot ".git"))) {
+    throw "Run this script from a Git checkout after moving the benchmark_lab folder into the standalone repository."
 }
 
-Push-Location $UpstreamPath
+if (-not (Test-Path $SubmodulePath)) {
+    git -C $RepoRoot submodule add $UpstreamUrl $SubmoduleRelativePath
+    if ($LASTEXITCODE -ne 0) { throw "Could not add the official Open Deep Research submodule." }
+}
+
+git -C $SubmodulePath fetch origin $PinnedSha
+if ($LASTEXITCODE -ne 0) { throw "Could not fetch the pinned upstream commit." }
+git -C $SubmodulePath checkout --detach $PinnedSha
+if ($LASTEXITCODE -ne 0) { throw "Could not check out the pinned upstream commit." }
+
+$ActualSha = (git -C $SubmodulePath rev-parse HEAD).Trim()
+if ($ActualSha -ne $PinnedSha) { throw "Upstream SHA mismatch. Expected $PinnedSha, got $ActualSha." }
+
+if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+    throw "uv is required. Install uv before continuing."
+}
+
+Push-Location $SubmodulePath
 try {
-    if (-not (Test-Path "pyproject.toml")) {
-        throw "Upstream pyproject.toml was not found; inspect the checked-out revision before proceeding."
+    if (-not (Test-Path "uv.lock") -or -not (Test-Path "pyproject.toml")) {
+        throw "Pinned upstream lockfile or pyproject.toml is missing."
     }
-    if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-        throw "uv is required. Install it before continuing."
-    }
-    uv venv
+    uv venv --python 3.11
+    if ($LASTEXITCODE -ne 0) { throw "Could not create the isolated Python environment." }
     uv sync --frozen
+    if ($LASTEXITCODE -ne 0) { throw "Dependency installation failed; do not update the lockfile automatically." }
 }
 finally {
     Pop-Location
 }
+Write-Output "Open Deep Research pinned and installed at $ActualSha"
