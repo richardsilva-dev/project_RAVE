@@ -47,3 +47,27 @@ def test_solo_is_one_sequential_researcher_without_delegation():
     assert result["budget"]["actual_model_calls"] == 6
     assert client.searches == 2
     assert len(result["provider_returned_sources"]) == 2
+
+
+def test_solo_rejects_final_citation_not_returned_by_provider():
+    class HallucinatedCitationClient(FakeClient):
+        def complete(self, *, model, system, user, web_search=False, max_output_tokens=4000):
+            if "producing the final report" in system:
+                return Response(
+                    '{"executive_answer":"answer","analysis":"analysis","findings":[],'
+                    '"sources":[{"url":"https://invented.example/fake"}],'
+                    '"limitations":[],"conclusions":"conclusion"}',
+                    {"prompt_tokens": 20, "completion_tokens": 10}, []
+                ), 0.1
+            return super().complete(model=model, system=system, user=user,
+                                     web_search=web_search, max_output_tokens=max_output_tokens)
+
+    settings = SimpleNamespace(
+        max_search_calls=3, max_model_calls=10, max_total_tokens=1000,
+        max_runtime_seconds=60, max_output_tokens_per_call=100,
+        model="gpt-4.1-mini", web_search_model="gpt-5-search-api",
+    )
+    result = SoloResearchAgent(HallucinatedCitationClient(), settings).run("Question", "Scope")
+    assert result["status"] == "PARTIAL"
+    assert result["stop_reason"] == "ValueError"
+    assert result["final_output"] == {}
