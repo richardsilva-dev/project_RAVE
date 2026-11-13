@@ -48,7 +48,9 @@ class ResearchClient:
         raise AssertionError("Unexpected LLM request")
 
 
-def test_three_agents_search_share_and_synthesize(tmp_path):
+def test_three_agents_search_share_and_synthesize(tmp_path, monkeypatch):
+    monkeypatch.setenv("RAVE_SEARCH_INPUT_USD_PER_1M", "1.25")
+    monkeypatch.setenv("RAVE_SEARCH_OUTPUT_USD_PER_1M", "10.00")
     client = ResearchClient()
     result = asyncio.run(HiveCore(client, str(tmp_path)).run("Small research question", "Keep it concise"))
 
@@ -62,3 +64,21 @@ def test_three_agents_search_share_and_synthesize(tmp_path):
     assert all(len(source["agents"]) == 3 for source in saved["integration"]["web_sources"])
     assert result["final_output"]["executive_answer"] == "Integrated answer"
     assert len(result["final_output"]["web_sources"]) == 2
+
+
+def test_shared_search_failure_does_not_fall_back_to_agent_search(tmp_path, monkeypatch):
+    monkeypatch.setenv("RAVE_SEARCH_INPUT_USD_PER_1M", "1.25")
+    monkeypatch.setenv("RAVE_SEARCH_OUTPUT_USD_PER_1M", "10.00")
+    client = ResearchClient()
+
+    def fail_search(*args, **kwargs):
+        raise RuntimeError("simulated shared search failure")
+
+    monkeypatch.setattr("rave.core.hive_core.perform_shared_research", fail_search)
+    result = asyncio.run(HiveCore(client, str(tmp_path)).run("Small research question", "Keep it concise"))
+
+    assert result["execution_status"] == "FAILED"
+    assert result["agent_results"] == []
+    assert result["final_output"]["executive_answer"] == ""
+    assert result["shared_research_error"] == "RuntimeError"
+    assert client.analyzed_agents == []
