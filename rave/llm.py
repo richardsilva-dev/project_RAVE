@@ -11,22 +11,33 @@ from datetime import datetime, timezone
 from threading import BoundedSemaphore
 from typing import Any
 from .config import Settings
+from .budget import RunBudget, RunBudgetExceeded
 
 logger = logging.getLogger(__name__)
 _active_call_log: contextvars.ContextVar[list[dict[str, Any]] | None] = contextvars.ContextVar("rave_call_log", default=None)
+_active_run_budget: contextvars.ContextVar[RunBudget | None] = contextvars.ContextVar("rave_run_budget", default=None)
 
 class capture_llm_calls:
-    """Isolate API call telemetry to one async run (also inherited by to_thread)."""
+    """Isolate telemetry and one shared budget to one async run."""
+    def __init__(self, budget: RunBudget | None = None):
+        self.budget = budget
+
     def __enter__(self):
         self.calls: list[dict[str, Any]] = []
         self.token = _active_call_log.set(self.calls)
+        self.budget_token = _active_run_budget.set(self.budget)
         return self.calls
 
     def __exit__(self, *_):
         _active_call_log.reset(self.token)
+        _active_run_budget.reset(self.budget_token)
 
 def current_llm_calls() -> list[dict[str, Any]]:
     return _active_call_log.get() or []
+
+
+def current_run_budget() -> RunBudget | None:
+    return _active_run_budget.get()
 
 @dataclass
 class LLMResponse:
@@ -66,7 +77,12 @@ class ChatCompletionsClient:
         with self._request_semaphore:
             for attempt in range(3):
                 attempts += 1
+                reservation = None
+                budget = current_run_budget()
                 try:
+                    if budget is not None:
+                        reservation = budget.reserve(payload["model"], system, user,
+                            payload["max_completion_tokens"], web_search)
                     with urllib.request.urlopen(request, timeout=self.settings.timeout_seconds) as response:
                         try:
                             body: dict[str, Any] = json.loads(response.read().decode("utf-8"))
@@ -139,6 +155,9 @@ class ChatCompletionsClient:
             raise RuntimeError("LLM provider returned invalid usage metadata") from exc
         unique_citations = list({citation["url"]: citation for citation in citations}.values())
         self._record_call(system, user, web_search, call_started, attempts, tokens, "COMPLETED")
+        budget = current_run_budget()
+        if budget is not None and reservation is not None:
+            budget.record(tokens, reservation, payload["model"], web_search)
         return LLMResponse(content, tokens, unique_citations)
 
     def _record_call(self, system: str, user: str, web_search: bool, started: float,
