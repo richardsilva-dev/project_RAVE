@@ -109,6 +109,8 @@ class RunBudget:
             raise RunBudgetExceeded("provider_usage_exceeded_reserved_token_budget")
         if self.cost_usd + self.reserved_cost_usd > self.max_cost_usd:
             raise RunBudgetExceeded("provider_usage_exceeded_reserved_cost_budget")
+        if time.monotonic() - self.started > self.max_seconds:
+            raise RunBudgetExceeded("run_time_budget_exceeded_during_call")
 
     def snapshot(self):
         return {
