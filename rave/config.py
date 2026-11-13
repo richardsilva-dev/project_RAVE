@@ -28,6 +28,7 @@ class Settings:
     max_concurrent_requests: int = 1
     web_search_context_size: str = "low"
     web_search_max_output_tokens: int = 512
+    analysis_max_output_tokens: int = 4096
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -37,8 +38,9 @@ class Settings:
             timeout = int(os.getenv("RAVE_TIMEOUT_SECONDS", "90"))
             max_concurrent = int(os.getenv("RAVE_MAX_CONCURRENT_REQUESTS", "1"))
             web_search_max_output = int(os.getenv("RAVE_WEB_SEARCH_MAX_OUTPUT_TOKENS", "512"))
+            analysis_max_output = int(os.getenv("RAVE_ANALYSIS_MAX_OUTPUT_TOKENS", "4096"))
         except ValueError as exc:
-            raise ValueError("RAVE_TEMPERATURE must be numeric and RAVE_TIMEOUT_SECONDS an integer") from exc
+            raise ValueError("RAVE_TEMPERATURE must be numeric and token/time limits integers") from exc
         base_url = os.getenv("RAVE_BASE_URL", "https://api.openai.com/v1").strip().rstrip("/")
         parsed = urlsplit(base_url)
         if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.username or parsed.password:
@@ -53,8 +55,8 @@ class Settings:
         web_search_enabled = web_search_text in {"true", "1", "yes"}
         web_search_model = os.getenv("RAVE_WEB_SEARCH_MODEL", "gpt-5-search-api").strip()
         context_size = os.getenv("RAVE_WEB_SEARCH_CONTEXT_SIZE", "low").strip().lower()
-        if not model or not output_dir or not 0 <= temperature <= 2 or timeout <= 0 or max_concurrent <= 0 or web_search_max_output <= 0:
-            raise ValueError("Model and output directory are required; temperature must be 0..2 and request limits positive")
+        if not model or not output_dir or not 0 <= temperature <= 2 or timeout <= 0 or max_concurrent <= 0 or web_search_max_output <= 0 or analysis_max_output <= 0:
+            raise ValueError("Model/output directory required; temperature 0..2 and all limits positive")
         if context_size not in {"low", "medium", "high"}:
             raise ValueError("RAVE_WEB_SEARCH_CONTEXT_SIZE must be low, medium, or high")
         if web_search_enabled and not web_search_model:
@@ -63,4 +65,4 @@ class Settings:
             raise ValueError("Built-in web search requires RAVE_BASE_URL=https://api.openai.com/v1; disable it for compatible providers")
         return cls(os.getenv("RAVE_API_KEY", "").strip(), base_url, model, temperature, timeout,
             output_dir, web_search_enabled, web_search_model, max_concurrent, context_size,
-            web_search_max_output)
+            web_search_max_output, analysis_max_output)
