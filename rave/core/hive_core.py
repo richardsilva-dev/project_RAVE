@@ -46,7 +46,7 @@ class HiveCore:
                 shared_research = await asyncio.to_thread(perform_shared_research, self.client, question, scope)
             except Exception as exc:
                 shared_research_error = type(exc).__name__
-                logger.warning("Run %s: shared search failed (%s); agents will use their regular research path",
+                logger.warning("Run %s: shared search failed (%s); stopping to preserve shared-research protocol",
                     run_id, shared_research_error)
             phase_timings["shared_web_research"] = time.perf_counter() - search_started
             logger.info("Run %s: shared research finished in %.1fs with %d sources", run_id,
