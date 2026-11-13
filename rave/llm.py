@@ -50,18 +50,15 @@ class ChatCompletionsClient:
         if web_search:
             if not self.settings.web_search_enabled:
                 raise RuntimeError("Web search is disabled in configuration")
-            # The dedicated Chat Completions search model always searches before
-            # answering and is compatible with projects whose Responses search
-            # model has a tighter token rate limit.
             payload = {"model": self.settings.web_search_model,
                 "web_search_options": {"search_context_size": self.settings.web_search_context_size},
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
                 "max_completion_tokens": self.settings.web_search_max_output_tokens}
-            endpoint = f"{self.settings.base_url}/chat/completions"
         else:
             payload = {"model": self.settings.model, "temperature": self.settings.temperature,
-                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
-            endpoint = f"{self.settings.base_url}/chat/completions"
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                "max_completion_tokens": self.settings.analysis_max_output_tokens}
+        endpoint = f"{self.settings.base_url}/chat/completions"
         request = urllib.request.Request(endpoint,
             data=json.dumps(payload).encode("utf-8"),
             headers={"Authorization": f"Bearer {self.settings.api_key}", "Content-Type": "application/json"},
@@ -88,9 +85,6 @@ class ChatCompletionsClient:
                     )
                     if transient_rate_limit and attempt < 2:
                         delay = retry_after if retry_after is not None else 2 ** attempt
-                        # Respect server token-window resets, which can exceed a
-                        # normal request timeout. Longer windows are surfaced to
-                        # the caller instead of being retried earlier than asked.
                         if delay <= 420:
                             logger.warning("Rate limited; retrying after %.1fs", delay)
                             time.sleep(delay)
@@ -103,8 +97,7 @@ class ChatCompletionsClient:
                     if retry_after is not None:
                         details.append(f"retry_after={retry_after:g}s")
                     for header, label in (("x-ratelimit-limit-tokens", "token_limit"),
-                        ("x-ratelimit-remaining-tokens", "tokens_remaining"),
-                        ("x-ratelimit-reset-tokens", "token_reset")):
+                        ("x-ratelimit-remaining-tokens", "tokens_remaining"), ("x-ratelimit-reset-tokens", "token_reset")):
                         value = exc.headers.get(header, "")
                         if value and re.fullmatch(r"[0-9A-Za-z.]+", value):
                             details.append(f"{label}={value}")
@@ -175,7 +168,6 @@ class ChatCompletionsClient:
 
     @staticmethod
     def _safe_error_fields(exc: urllib.error.HTTPError) -> tuple[str, str]:
-        """Expose only provider error codes/types, never echoed messages or prompts."""
         try:
             payload = json.loads(exc.read(64_000).decode("utf-8", errors="replace"))
             error = payload.get("error", {}) if isinstance(payload, dict) else {}
