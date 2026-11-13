@@ -50,7 +50,7 @@ class RunBudget:
         # No default is supplied for GPT-5 Search API rates: they must be
         # explicitly configured from the account's pricing record.
         return cls(
-            max_tokens=positive_int("RAVE_MAX_RUN_TOKENS", 40000),
+            max_tokens=positive_int("RAVE_MAX_RUN_TOKENS", 80000),
             max_searches=positive_int("RAVE_MAX_RUN_SEARCHES", 3),
             max_model_calls=positive_int("RAVE_MAX_RUN_MODEL_CALLS", 12),
             max_seconds=positive_float("RAVE_MAX_RUN_SECONDS", 180),
