@@ -3,6 +3,7 @@ import re
 import logging
 import time
 import contextvars
+import http.client
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -119,6 +120,10 @@ class ChatCompletionsClient:
                     self._record_call(system, user, web_search, call_started, attempts,
                         {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
                     raise RuntimeError(f"Could not reach LLM provider: {exc.reason}") from exc
+                except (OSError, http.client.HTTPException) as exc:
+                    self._record_call(system, user, web_search, call_started, attempts,
+                        {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
+                    raise RuntimeError(f"Connection to LLM provider failed: {type(exc).__name__}") from exc
         citations: list[dict[str, str]] = []
         try:
             message = body["choices"][0]["message"]
