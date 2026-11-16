@@ -25,7 +25,12 @@ class BaseAgent(ABC):
     def parse_json(self, raw: str) -> dict[str, Any]:
         text = raw.strip()
         if text.startswith("```"):
-            text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            text = text[3:]
+            if text.startswith("json"):
+                text = text[4:]
+            text = text.strip()
+            if text.endswith("```"):
+                text = text[:-3].strip()
         try:
             return json.loads(text)
         except json.JSONDecodeError:
