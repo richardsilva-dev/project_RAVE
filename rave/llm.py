@@ -3,6 +3,7 @@ import re
 import logging
 import time
 import contextvars
+import http.client
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -11,22 +12,46 @@ from datetime import datetime, timezone
 from threading import BoundedSemaphore
 from typing import Any
 from .config import Settings
+from .budget import RunBudget, RunBudgetExceeded
 
 logger = logging.getLogger(__name__)
+
+
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    handler_order = 100
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # Never forward a Bearer authorization header to a redirected host.
+        return None
+
+
+def _open_url(request, timeout):
+    opener = urllib.request.build_opener(_NoRedirectHandler())
+    return opener.open(request, timeout=timeout)
 _active_call_log: contextvars.ContextVar[list[dict[str, Any]] | None] = contextvars.ContextVar("rave_call_log", default=None)
+_active_run_budget: contextvars.ContextVar[RunBudget | None] = contextvars.ContextVar("rave_run_budget", default=None)
 
 class capture_llm_calls:
-    """Isolate API call telemetry to one async run (also inherited by to_thread)."""
+    """Isolate telemetry and one shared budget to one async run."""
+    def __init__(self, budget: RunBudget | None = None):
+        self.budget = budget
+
     def __enter__(self):
         self.calls: list[dict[str, Any]] = []
         self.token = _active_call_log.set(self.calls)
+        self.budget_token = _active_run_budget.set(self.budget)
         return self.calls
 
     def __exit__(self, *_):
         _active_call_log.reset(self.token)
+        _active_run_budget.reset(self.budget_token)
 
 def current_llm_calls() -> list[dict[str, Any]]:
     return _active_call_log.get() or []
+
+
+def current_run_budget() -> RunBudget | None:
+    return _active_run_budget.get()
 
 @dataclass
 class LLMResponse:
@@ -40,7 +65,7 @@ class ChatCompletionsClient:
         self.settings = settings
         self._request_semaphore = BoundedSemaphore(settings.max_concurrent_requests)
 
-    def complete(self, system: str, user: str, *, web_search: bool = False) -> LLMResponse:
+    def complete(self, system: str, user: str, *, web_search: bool = False, max_completion_tokens: int | None = None) -> LLMResponse:
         call_started = time.perf_counter()
         attempts = 0
         if not self.settings.api_key:
@@ -50,18 +75,15 @@ class ChatCompletionsClient:
         if web_search:
             if not self.settings.web_search_enabled:
                 raise RuntimeError("Web search is disabled in configuration")
-            # The dedicated Chat Completions search model always searches before
-            # answering and is compatible with projects whose Responses search
-            # model has a tighter token rate limit.
             payload = {"model": self.settings.web_search_model,
                 "web_search_options": {"search_context_size": self.settings.web_search_context_size},
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
                 "max_completion_tokens": self.settings.web_search_max_output_tokens}
-            endpoint = f"{self.settings.base_url}/chat/completions"
         else:
             payload = {"model": self.settings.model, "temperature": self.settings.temperature,
-                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
-            endpoint = f"{self.settings.base_url}/chat/completions"
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                "max_completion_tokens": (self.settings.analysis_max_output_tokens if max_completion_tokens is None else max_completion_tokens)}
+        endpoint = f"{self.settings.base_url}/chat/completions"
         request = urllib.request.Request(endpoint,
             data=json.dumps(payload).encode("utf-8"),
             headers={"Authorization": f"Bearer {self.settings.api_key}", "Content-Type": "application/json"},
@@ -69,8 +91,15 @@ class ChatCompletionsClient:
         with self._request_semaphore:
             for attempt in range(3):
                 attempts += 1
+                reservation = None
+                budget = current_run_budget()
                 try:
-                    with urllib.request.urlopen(request, timeout=self.settings.timeout_seconds) as response:
+                    timeout = self.settings.timeout_seconds
+                    if budget is not None:
+                        reservation = budget.reserve(payload["model"], system, user,
+                            payload["max_completion_tokens"], web_search)
+                        timeout = min(timeout, max(0.001, budget.snapshot()["remaining"]["seconds"]))
+                    with _open_url(request, timeout=timeout) as response:
                         try:
                             body: dict[str, Any] = json.loads(response.read().decode("utf-8"))
                         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -88,9 +117,6 @@ class ChatCompletionsClient:
                     )
                     if transient_rate_limit and attempt < 2:
                         delay = retry_after if retry_after is not None else 2 ** attempt
-                        # Respect server token-window resets, which can exceed a
-                        # normal request timeout. Longer windows are surfaced to
-                        # the caller instead of being retried earlier than asked.
                         if delay <= 420:
                             logger.warning("Rate limited; retrying after %.1fs", delay)
                             time.sleep(delay)
@@ -103,8 +129,7 @@ class ChatCompletionsClient:
                     if retry_after is not None:
                         details.append(f"retry_after={retry_after:g}s")
                     for header, label in (("x-ratelimit-limit-tokens", "token_limit"),
-                        ("x-ratelimit-remaining-tokens", "tokens_remaining"),
-                        ("x-ratelimit-reset-tokens", "token_reset")):
+                        ("x-ratelimit-remaining-tokens", "tokens_remaining"), ("x-ratelimit-reset-tokens", "token_reset")):
                         value = exc.headers.get(header, "")
                         if value and re.fullmatch(r"[0-9A-Za-z.]+", value):
                             details.append(f"{label}={value}")
@@ -112,6 +137,8 @@ class ChatCompletionsClient:
                     if request_id and re.fullmatch(r"[A-Za-z0-9_-]{1,80}", request_id):
                         details.append(f"request_id={request_id}")
                     suffix = f" ({', '.join(details)})" if details else ""
+                    if exc.code in {401, 403} and budget is not None and reservation is not None:
+                        budget.release_reservation(reservation)
                     self._record_call(system, user, web_search, call_started, attempts,
                         {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
                     raise RuntimeError(f"LLM provider returned HTTP {exc.code}{suffix}") from exc
@@ -119,6 +146,10 @@ class ChatCompletionsClient:
                     self._record_call(system, user, web_search, call_started, attempts,
                         {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
                     raise RuntimeError(f"Could not reach LLM provider: {exc.reason}") from exc
+                except (OSError, http.client.HTTPException) as exc:
+                    self._record_call(system, user, web_search, call_started, attempts,
+                        {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
+                    raise RuntimeError(f"Connection to LLM provider failed: {type(exc).__name__}") from exc
         citations: list[dict[str, str]] = []
         try:
             message = body["choices"][0]["message"]
@@ -146,6 +177,9 @@ class ChatCompletionsClient:
             raise RuntimeError("LLM provider returned invalid usage metadata") from exc
         unique_citations = list({citation["url"]: citation for citation in citations}.values())
         self._record_call(system, user, web_search, call_started, attempts, tokens, "COMPLETED")
+        budget = current_run_budget()
+        if budget is not None and reservation is not None:
+            budget.record(tokens, reservation, payload["model"], web_search)
         return LLMResponse(content, tokens, unique_citations)
 
     def _record_call(self, system: str, user: str, web_search: bool, started: float,
@@ -175,7 +209,6 @@ class ChatCompletionsClient:
 
     @staticmethod
     def _safe_error_fields(exc: urllib.error.HTTPError) -> tuple[str, str]:
-        """Expose only provider error codes/types, never echoed messages or prompts."""
         try:
             payload = json.loads(exc.read(64_000).decode("utf-8", errors="replace"))
             error = payload.get("error", {}) if isinstance(payload, dict) else {}

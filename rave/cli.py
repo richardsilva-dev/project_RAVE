@@ -3,7 +3,8 @@ import asyncio
 import json
 import logging
 from .config import Settings
-from .llm import ChatCompletionsClient, capture_llm_calls, current_llm_calls
+from .llm import ChatCompletionsClient, capture_llm_calls, current_llm_calls, current_run_budget
+from .budget import RunBudget
 from .core.hive_core import HiveCore
 from .agents.single import SingleAgent
 from .communication import MessageBus
@@ -20,7 +21,8 @@ async def run_single(client, output_dir, question, scope):
     agent = SingleAgent("single-agent", "Agente individual", "Baseline", client, MessageBus(run_id))
     started = time.perf_counter()
     started_at = datetime.now(timezone.utc).isoformat()
-    with capture_llm_calls():
+    run_budget = RunBudget.from_env()
+    with capture_llm_calls(run_budget):
         research = None
         if client.settings.web_search_enabled:
             research = await asyncio.to_thread(perform_shared_research, client, question, scope)
@@ -32,8 +34,10 @@ async def run_single(client, output_dir, question, scope):
         sum(c.get("completion_tokens", 0) for c in calls), 0, "COMPLETED",
         sum(c.get("request_attempts", 1) for c in calls), calls)
     path = save_run(output_dir, run_id, {"configuration": "single", "question": question,
-        "metadata": metadata, "shared_web_research": research, "agent_result": result})
-    return {"run_id": run_id, "result_path": str(path), "metadata": metadata, "agent_result": result}
+        "metadata": metadata, "shared_web_research": research, "agent_result": result,
+        "run_budget": run_budget.snapshot()})
+    return {"run_id": run_id, "result_path": str(path), "metadata": metadata,
+        "agent_result": result, "run_budget": run_budget.snapshot()}
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")

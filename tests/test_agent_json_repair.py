@@ -47,13 +47,42 @@ def test_malformed_research_json_is_repaired_and_keeps_sources():
     assert len(client.calls) == 2
 
 
-def test_single_line_code_fence_is_parsed_or_reported_as_value_error():
+def test_single_line_code_fence_is_parsed():
     agent = StubAgent("agent-1", "Test", "Testing", RepairClient(), MessageBus("run-1", expected_publishers=1))
-
     assert agent.parse_json('```{"summary": "ok"}```') == {"summary": "ok"}
+
+
+def test_empty_code_fence_raises_repairable_value_error():
+    agent = StubAgent("agent-1", "Test", "Testing", RepairClient(), MessageBus("run-1", expected_publishers=1))
     try:
         agent.parse_json("```")
     except ValueError:
         pass
     else:
         raise AssertionError("expected ValueError for an empty code fence")
+
+
+
+def test_agent_output_bounds_match_single_agent_baseline():
+    import pytest
+
+    finding = {
+        "category": "fact", "title": "t", "claim": "c", "explanation": "e",
+        "evidence": [], "limitations": [], "open_questions": [],
+    }
+    too_many_findings = {
+        "summary": "s", "findings": [finding] * 11,
+        "limitations": [], "open_questions": [],
+    }
+    with pytest.raises(ValueError, match="more than 10 findings"):
+        BaseAgent.validate_result(too_many_findings, "agent-1")
+
+    too_many_evidence = dict(finding)
+    too_many_evidence["evidence"] = [
+        {"source_title": "s", "source_url": "https://example.org",
+         "supporting_excerpt_or_location": "x"} for _ in range(4)
+    ]
+    result = {"summary": "s", "findings": [too_many_evidence],
+              "limitations": [], "open_questions": []}
+    with pytest.raises(ValueError, match="more than 3 evidence items"):
+        BaseAgent.validate_result(result, "agent-1")
