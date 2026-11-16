@@ -6,12 +6,13 @@ from datetime import datetime, timezone
 from ..agents import FundamentalsAgent, MechanismAgent, PerspectiveAgent
 from ..communication import MessageBus
 from ..contracts import RunMetadata, new_id
-from ..llm import ChatCompletionsClient, capture_llm_calls, current_llm_calls
+from ..llm import ChatCompletionsClient, capture_llm_calls, current_llm_calls, current_run_budget
 from ..storage import save_run
 from .integration import integrate
 from .planner import create_tasks
 from .synthesis import synthesize
 from ..research import shared_research as perform_shared_research
+from ..budget import RunBudget
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,8 @@ class HiveCore:
 
     async def run(self, question: str, scope: str = "Investigar a pergunta sem expandir além do necessário.",
             research_mode: str | None = None) -> dict:
-        with capture_llm_calls():
+        budget = RunBudget.from_env()
+        with capture_llm_calls(budget):
             return await self._run(question, scope, research_mode)
 
     async def _run(self, question: str, scope: str, research_mode: str | None) -> dict:
@@ -106,6 +108,8 @@ class HiveCore:
             logger.info("Run %s: final synthesis finished in %.1fs", run_id, phase_timings["final_synthesis"])
         duration = time.perf_counter() - started
         calls = list(current_llm_calls())
+        budget = current_run_budget()
+        budget_snapshot = budget.snapshot() if budget is not None else {}
         metadata = RunMetadata(run_id, question, f"RAVE:{research_mode}", self.client.settings.model,
             started_wall, datetime.now(timezone.utc).isoformat(), duration,
             len(calls), sum(c.get("prompt_tokens", 0) for c in calls),
@@ -119,7 +123,8 @@ class HiveCore:
             "research_mode": research_mode,
             "failed_agents": failed_agents, "partial_agents": partial_agents,
             "shared_research_error": shared_research_error,
-            "synthesis_error": synthesis_error}
+            "synthesis_error": synthesis_error,
+            "run_budget": budget_snapshot}
         path = save_run(self.output_dir, run_id, payload)
         logger.info("Run %s saved to %s in %.1fs", run_id, path, duration)
         return {"run_id": run_id, "result_path": str(path), "metadata": metadata,
@@ -127,4 +132,5 @@ class HiveCore:
             "research_mode": research_mode,
             "execution_status": execution_status, "failed_agents": failed_agents,
             "partial_agents": partial_agents,
-            "shared_research_error": shared_research_error, "synthesis_error": synthesis_error}
+            "shared_research_error": shared_research_error, "synthesis_error": synthesis_error,
+            "run_budget": budget_snapshot}
