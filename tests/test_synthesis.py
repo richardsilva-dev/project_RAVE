@@ -6,10 +6,12 @@ from rave.llm import LLMResponse
 
 
 class FakeClient:
-    def complete(self, system, user):
+    def complete(self, system, user, *, max_completion_tokens=None):
         prompt = json.loads(user)
+        assert max_completion_tokens == 8192
         assert prompt["web_sources"][0]["url"] == "https://example.org/source"
-        return LLMResponse(json.dumps({"executive_answer": "answer", "evidence_and_sources": []}),
+        return LLMResponse(json.dumps({"executive_answer": "answer", "integrated_analysis": "",
+            "collective_integration": "", "evidence_and_sources": [], "gaps_and_limitations": [], "conclusions": ""}),
             {"prompt_tokens": 4, "completion_tokens": 3})
 
 
