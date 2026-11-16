@@ -17,15 +17,15 @@ Atualizado em 13/11/2026. Esta branch experimental é separada da branch de prod
 ## Limitações
 
 - A tarifa de tokens específica de GPT-5 Search API não aparece como linha separada na tabela pública de preços. As variáveis de preço precisam ser configuradas explicitamente e sua origem documentada.
+- O limite de saída de análise por agente é 4.096 tokens; a síntese final tem limite separado de 8.192 tokens. Ambos consomem o mesmo orçamento global da execução.
 - O limite de US$ 0,50 é estimado localmente, não imposto pelo provedor. O contexto interno de busca é variável. Configure um limite de gastos separado no OpenAI Platform.
-- A implementação no GitHub ainda não foi executada em ambiente local após estas alterações. Não declarar os testes aprovados até executar `pytest`.
+- Validação offline no GitHub Actions concluída: 25 testes aprovados no commit `831b5b45321ec827d9383d9a73c685740315badf` (run `43920287460`). Nenhuma chamada de pesquisa paga foi realizada.
 - Esta branch não altera `main`; ela deve ser testada antes de qualquer merge.
 - Comparação B permanece bloqueada pelas pendências de segurança documentadas no laboratório.
 
 ## Próxima validação
 
-1. Adicionar ao `.env` os valores de preço GPT-5 Search API aplicáveis ao projeto OpenAI.
-2. Executar `pytest -q`.
-3. Fazer uma única execução Hive com a pergunta e o escopo fixados no protocolo do laboratório.
-4. Verificar `execution_status`, `run_budget`, tokens, custo estimado, chamadas, retries, duração e arquivos persistidos.
-5. Só depois decidir se o ambiente está pronto para uma execução pareada com a Comparação A.
+1. Confirmar que a chave local é válida com a verificação não faturável `GET /models` do executor do laboratório.
+2. Fazer uma única execução Hive com a pergunta e o escopo preservados da Comparação A.
+3. Verificar `execution_status`, `run_budget`, tokens, custo estimado, chamadas, retries, duração e arquivos persistidos.
+4. Só depois avaliar os outputs e decidir se a comparação é elegível.
