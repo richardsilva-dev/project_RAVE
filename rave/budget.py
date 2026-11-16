@@ -80,7 +80,7 @@ class RunBudget:
             raise RunBudgetExceeded(f"no_price_configured_for_model:{model}")
         estimated_cost = (input_reserve * input_rate + output_tokens * output_rate) / 1_000_000
         if web_search:
-            estimated_cost += 0.01 / 1000
+            estimated_cost += 0.01
         if self.cost_usd + self.reserved_cost_usd + estimated_cost > self.max_cost_usd:
             raise RunBudgetExceeded("run_cost_budget_reservation_exceeded")
         self.calls += 1
@@ -89,6 +89,12 @@ class RunBudget:
         self.reserved_tokens += token_reserve
         self.reserved_cost_usd += estimated_cost
         return token_reserve, estimated_cost
+
+    def release_reservation(self, reservation):
+        """Release a reservation only after a definitive 401/403 rejection."""
+        reserved_tokens, reserved_cost = reservation
+        self.reserved_tokens = max(0, self.reserved_tokens - reserved_tokens)
+        self.reserved_cost_usd = max(0.0, self.reserved_cost_usd - reserved_cost)
 
     def record(self, usage, reservation, model, web_search):
         reserved_tokens, reserved_cost = reservation
@@ -100,7 +106,7 @@ class RunBudget:
                                    else (self.search_input_rate, self.search_output_rate))
         actual_cost = (input_tokens * input_rate + output_tokens * output_rate) / 1_000_000
         if web_search:
-            actual_cost += 0.01 / 1000
+            actual_cost += 0.01
         self.reserved_tokens = max(0, self.reserved_tokens - reserved_tokens)
         self.reserved_cost_usd = max(0.0, self.reserved_cost_usd - reserved_cost)
         self.tokens += input_tokens + output_tokens
@@ -122,7 +128,7 @@ class RunBudget:
             "pricing": {"gpt-4.1-mini": {"input_usd_per_1m": 0.40, "output_usd_per_1m": 1.60},
                         "gpt-5-search-api": {"input_usd_per_1m": self.search_input_rate,
                                              "output_usd_per_1m": self.search_output_rate},
-                        "web_search_usd_per_call": 0.01 / 1000,
+                        "web_search_usd_per_call": 0.01,
                         "search_rate_source": "explicit local .env configuration; verify against the billing record"},
             "reserved": {"tokens": self.reserved_tokens, "estimated_cost_usd": round(self.reserved_cost_usd, 8)},
             "remaining": {"tokens": max(0, self.max_tokens-self.tokens-self.reserved_tokens),
