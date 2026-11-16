@@ -3,6 +3,7 @@ import re
 import logging
 import time
 import contextvars
+import http.client
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -51,7 +52,7 @@ class ChatCompletionsClient:
         self.settings = settings
         self._request_semaphore = BoundedSemaphore(settings.max_concurrent_requests)
 
-    def complete(self, system: str, user: str, *, web_search: bool = False) -> LLMResponse:
+    def complete(self, system: str, user: str, *, web_search: bool = False, max_completion_tokens: int | None = None) -> LLMResponse:
         call_started = time.perf_counter()
         attempts = 0
         if not self.settings.api_key:
@@ -68,7 +69,7 @@ class ChatCompletionsClient:
         else:
             payload = {"model": self.settings.model, "temperature": self.settings.temperature,
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-                "max_completion_tokens": self.settings.analysis_max_output_tokens}
+                "max_completion_tokens": (self.settings.analysis_max_output_tokens if max_completion_tokens is None else max_completion_tokens)}
         endpoint = f"{self.settings.base_url}/chat/completions"
         request = urllib.request.Request(endpoint,
             data=json.dumps(payload).encode("utf-8"),
@@ -128,6 +129,10 @@ class ChatCompletionsClient:
                     self._record_call(system, user, web_search, call_started, attempts,
                         {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
                     raise RuntimeError(f"Could not reach LLM provider: {exc.reason}") from exc
+                except (OSError, http.client.HTTPException) as exc:
+                    self._record_call(system, user, web_search, call_started, attempts,
+                        {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
+                    raise RuntimeError(f"Connection to LLM provider failed: {type(exc).__name__}") from exc
         citations: list[dict[str, str]] = []
         try:
             message = body["choices"][0]["message"]
