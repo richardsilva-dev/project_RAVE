@@ -45,3 +45,19 @@ def test_malformed_research_json_is_repaired_and_keeps_sources():
     assert result.web_sources[0].source_url == "https://example.org"
     assert result.usage == {"prompt_tokens": 14, "completion_tokens": 11}
     assert len(client.calls) == 2
+
+
+
+def test_single_line_code_fence_is_parsed():
+    agent = StubAgent("agent-1", "Test", "Testing", RepairClient(), MessageBus("run-1", expected_publishers=1))
+    assert agent.parse_json('`{"summary": "ok"}`') == {"summary": "ok"}
+
+
+def test_empty_code_fence_raises_repairable_value_error():
+    agent = StubAgent("agent-1", "Test", "Testing", RepairClient(), MessageBus("run-1", expected_publishers=1))
+    try:
+        agent.parse_json("`")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("expected ValueError for an empty code fence")
