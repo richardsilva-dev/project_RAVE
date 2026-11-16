@@ -138,3 +138,38 @@ def test_authenticated_requests_refuse_redirects():
         request, None, 302, "Found", {}, "https://attacker.example/collect"
     )
     assert redirected is None
+
+
+
+def test_auth_rejection_releases_search_reservation_without_retry():
+    from rave.budget import RunBudget
+    from rave.llm import capture_llm_calls
+
+    settings = Settings(
+        "test-key", "https://api.openai.com/v1", "gpt-4.1-mini",
+        0.2, 30, "data/runs", True, "gpt-5-search-api",
+    )
+    client = ChatCompletionsClient(settings)
+    budget = RunBudget(
+        max_tokens=1000, max_searches=2, max_model_calls=2, max_seconds=30,
+        max_cost_usd=0.10, search_input_reserve_tokens=100,
+        search_input_rate=1.25, search_output_rate=10.0,
+    )
+    error = urllib.error.HTTPError(
+        "https://api.openai.com/v1/chat/completions", 401, "Unauthorized", {},
+        io.BytesIO(json.dumps({"error": {"type": "invalid_request_error", "code": "invalid_api_key"}}).encode()),
+    )
+    with capture_llm_calls(budget), patch("rave.llm._open_url", side_effect=error) as open_url:
+        try:
+            client.complete("system", "question", web_search=True)
+        except RuntimeError as exc:
+            assert "HTTP 401" in str(exc)
+            assert "invalid_api_key" in str(exc)
+        else:
+            raise AssertionError("Expected authentication failure")
+    snapshot = budget.snapshot()
+    assert open_url.call_count == 1
+    assert snapshot["used"]["model_calls"] == 1
+    assert snapshot["used"]["searches"] == 1
+    assert snapshot["reserved"]["tokens"] == 0
+    assert snapshot["reserved"]["estimated_cost_usd"] == 0
