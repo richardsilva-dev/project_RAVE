@@ -15,6 +15,19 @@ from .config import Settings
 from .budget import RunBudget, RunBudgetExceeded
 
 logger = logging.getLogger(__name__)
+
+
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    handler_order = 100
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # Never forward a Bearer authorization header to a redirected host.
+        return None
+
+
+def _open_url(request, timeout):
+    opener = urllib.request.build_opener(_NoRedirectHandler())
+    return opener.open(request, timeout=timeout)
 _active_call_log: contextvars.ContextVar[list[dict[str, Any]] | None] = contextvars.ContextVar("rave_call_log", default=None)
 _active_run_budget: contextvars.ContextVar[RunBudget | None] = contextvars.ContextVar("rave_run_budget", default=None)
 
@@ -84,7 +97,7 @@ class ChatCompletionsClient:
                     if budget is not None:
                         reservation = budget.reserve(payload["model"], system, user,
                             payload["max_completion_tokens"], web_search)
-                    with urllib.request.urlopen(request, timeout=self.settings.timeout_seconds) as response:
+                    with _open_url(request, timeout=self.settings.timeout_seconds) as response:
                         try:
                             body: dict[str, Any] = json.loads(response.read().decode("utf-8"))
                         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
