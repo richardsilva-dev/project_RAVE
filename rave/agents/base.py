@@ -44,6 +44,8 @@ class BaseAgent(ABC):
         required = {"summary": str, "findings": list, "limitations": list, "open_questions": list}
         if not isinstance(data, dict) or any(not isinstance(data.get(key), kind) for key, kind in required.items()):
             raise ValueError(f"{agent_id} returned JSON outside the required result schema")
+        if len(data["summary"].split()) > 120:
+            raise ValueError(f"{agent_id} exceeded the 120-word summary output bound")
         if len(data["findings"]) > 3:
             raise ValueError(f"{agent_id} exceeded the three-finding per-agent output bound")
         for key in ("limitations", "open_questions"):
