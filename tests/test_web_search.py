@@ -107,3 +107,22 @@ def test_retry_honors_long_server_token_reset():
     assert response.content == "ok"
     assert open_url.call_count == 2
     sleep.assert_called_once_with(370.375)
+
+
+def test_read_timeout_is_reported_and_recorded():
+    from rave.llm import capture_llm_calls
+
+    class TimeoutResponse(FakeHTTPResponse):
+        def read(self):
+            raise TimeoutError("timed out")
+
+    settings = Settings("test-key", "https://api.openai.com/v1", "chat-model")
+    client = ChatCompletionsClient(settings)
+    with capture_llm_calls() as calls, patch("rave.llm.urllib.request.urlopen", return_value=TimeoutResponse({})):
+        try:
+            client.complete("system", "question")
+        except RuntimeError as exc:
+            assert "TimeoutError" in str(exc)
+        else:
+            raise AssertionError("Expected connection failure")
+    assert [call["status"] for call in calls] == ["FAILED"]
