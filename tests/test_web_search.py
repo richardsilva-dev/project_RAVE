@@ -2,6 +2,7 @@ import asyncio
 import io
 import json
 import urllib.error
+import urllib.request
 from unittest.mock import patch
 
 from rave.config import Settings
