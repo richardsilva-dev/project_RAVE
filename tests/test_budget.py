@@ -51,3 +51,22 @@ def test_budget_requires_explicit_search_model_prices(monkeypatch):
     monkeypatch.delenv("RAVE_SEARCH_OUTPUT_USD_PER_1M", raising=False)
     with pytest.raises(ValueError, match="RAVE_SEARCH_INPUT_USD_PER_1M"):
         RunBudget.from_env()
+
+
+def test_search_fee_matches_ten_usd_per_thousand_calls():
+    b = budget()
+    reservation = b.reserve("gpt-5-search-api", "system", "query", 10, True)
+    b.record({"prompt_tokens": 10, "completion_tokens": 5}, reservation,
+             "gpt-5-search-api", True)
+    expected = (10 * 1.25 + 5 * 10.0) / 1_000_000 + 0.01
+    assert b.cost_usd == pytest.approx(expected)
+
+
+def test_definitive_auth_rejection_can_release_reservation():
+    b = budget()
+    reservation = b.reserve("gpt-4.1-mini", "system", "query", 10, False)
+    assert b.reserved_tokens > 0 and b.reserved_cost_usd > 0
+    b.release_reservation(reservation)
+    assert b.reserved_tokens == 0
+    assert b.reserved_cost_usd == 0
+    assert b.calls == 1
