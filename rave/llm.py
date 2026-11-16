@@ -160,6 +160,8 @@ class ChatCompletionsClient:
                     if request_id and re.fullmatch(r"[A-Za-z0-9_-]{1,80}", request_id):
                         details.append(f"request_id={request_id}")
                     suffix = f" ({', '.join(details)})" if details else ""
+                    if exc.code in {401, 403} and budget is not None and reservation is not None:
+                        budget.release_reservation(reservation)
                     self._record_call(system, user, web_search, call_started, attempts,
                         {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
                     raise RuntimeError(f"LLM provider returned HTTP {exc.code}{suffix}") from exc
@@ -173,6 +175,10 @@ class ChatCompletionsClient:
                     self._record_call(system, user, web_search, call_started, attempts,
                         {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
                     raise TimeoutError("LLM request timed out") from exc
+                except (OSError, http.client.HTTPException) as exc:
+                    self._record_call(system, user, web_search, call_started, attempts,
+                        {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
+                    raise RuntimeError(f"Connection to LLM provider failed: {type(exc).__name__}") from exc
         citations: list[dict[str, str]] = []
         try:
             message = body["choices"][0]["message"]
@@ -200,6 +206,9 @@ class ChatCompletionsClient:
             raise RuntimeError("LLM provider returned invalid usage metadata") from exc
         unique_citations = list({citation["url"]: citation for citation in citations}.values())
         self._record_call(system, user, web_search, call_started, attempts, tokens, "COMPLETED")
+        budget = current_run_budget()
+        if budget is not None and reservation is not None:
+            budget.record(tokens, reservation, payload["model"], web_search)
         return LLMResponse(content, tokens, unique_citations)
 
     def _record_call(self, system: str, user: str, web_search: bool, started: float,
