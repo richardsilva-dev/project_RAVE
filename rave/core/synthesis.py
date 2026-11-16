@@ -17,7 +17,10 @@ async def synthesize(client: ChatCompletionsClient, question: str, integrated: d
         "web_sources": integrated.get("web_sources", []),
         "provenance_note": integrated.get("provenance_note", ""),
         "instruction": "Produce one structured final response and attribute claims to agent IDs where useful."}, ensure_ascii=False)
-    response = await asyncio.to_thread(client.complete, SYSTEM, prompt)
+    settings = getattr(client, "settings", None)
+    synthesis_max_output = getattr(settings, "synthesis_max_output_tokens", 8192)
+    response = await asyncio.to_thread(client.complete, SYSTEM, prompt,
+        max_completion_tokens=synthesis_max_output)
     try:
         output = json.loads(response.content)
     except json.JSONDecodeError:

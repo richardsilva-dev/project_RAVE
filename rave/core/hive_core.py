@@ -6,7 +6,8 @@ from datetime import datetime, timezone
 from ..agents import FundamentalsAgent, MechanismAgent, PerspectiveAgent
 from ..communication import MessageBus
 from ..contracts import RunMetadata, new_id
-from ..llm import ChatCompletionsClient, capture_llm_calls, current_llm_calls
+from ..llm import ChatCompletionsClient, capture_llm_calls, current_llm_calls, current_run_budget
+from ..budget import RunBudget
 from ..storage import save_run
 from .integration import integrate
 from .planner import create_tasks
@@ -20,7 +21,8 @@ class HiveCore:
         self.client, self.output_dir = client, output_dir
 
     async def run(self, question: str, scope: str = "Investigar a pergunta sem expandir além do necessário.") -> dict:
-        with capture_llm_calls():
+        budget = RunBudget.from_env()
+        with capture_llm_calls(budget):
             return await self._run(question, scope)
 
     async def _run(self, question: str, scope: str) -> dict:
@@ -44,19 +46,26 @@ class HiveCore:
                 shared_research = await asyncio.to_thread(perform_shared_research, self.client, question, scope)
             except Exception as exc:
                 shared_research_error = type(exc).__name__
-                logger.warning("Run %s: shared search failed (%s); agents will use their regular research path",
+                logger.warning("Run %s: shared search failed (%s); stopping to preserve shared-research protocol",
                     run_id, shared_research_error)
             phase_timings["shared_web_research"] = time.perf_counter() - search_started
             logger.info("Run %s: shared research finished in %.1fs with %d sources", run_id,
                 phase_timings["shared_web_research"], len(shared_research.citations or []) if shared_research else 0)
         investigation_started = time.perf_counter()
-        outcomes = await asyncio.gather(*(agent.run(task, shared_research)
-            for agent, task in zip(agents, tasks)), return_exceptions=True)
-        results = [outcome for outcome in outcomes if not isinstance(outcome, BaseException)]
-        failed_agents = [{"agent_id": agent.agent_id, "error_type": type(outcome).__name__}
-            for agent, outcome in zip(agents, outcomes) if isinstance(outcome, BaseException)]
-        execution_status = "COMPLETED" if not failed_agents and not shared_research_error else (
-            "PARTIAL" if results else "INVALID")
+        if self.client.settings.web_search_enabled and shared_research_error:
+            # Shared-research mode must not silently degrade into independent agent searches.
+            outcomes = []
+            results = []
+            failed_agents = [{"agent_id": agent.agent_id, "error_type": "SharedResearchUnavailable"}
+                for agent in agents]
+            execution_status = "FAILED"
+        else:
+            outcomes = await asyncio.gather(*(agent.run(task, shared_research)
+                for agent, task in zip(agents, tasks)), return_exceptions=True)
+            results = [outcome for outcome in outcomes if not isinstance(outcome, BaseException)]
+            failed_agents = [{"agent_id": agent.agent_id, "error_type": type(outcome).__name__}
+                for agent, outcome in zip(agents, outcomes) if isinstance(outcome, BaseException)]
+            execution_status = "COMPLETED" if not failed_agents else ("PARTIAL" if results else "FAILED")
         phase_timings["agent_research_and_peer_integration"] = time.perf_counter() - investigation_started
         logger.info("Run %s: agents finished in %.1fs; integrating findings", run_id,
             phase_timings["agent_research_and_peer_integration"])
@@ -93,6 +102,8 @@ class HiveCore:
             logger.info("Run %s: final synthesis finished in %.1fs", run_id, phase_timings["final_synthesis"])
         duration = time.perf_counter() - started
         calls = list(current_llm_calls())
+        run_budget = current_run_budget()
+        budget_snapshot = run_budget.snapshot() if run_budget is not None else {}
         metadata = RunMetadata(run_id, question, "RAVE", self.client.settings.model,
             started_wall, datetime.now(timezone.utc).isoformat(), duration,
             len(calls), sum(c.get("prompt_tokens", 0) for c in calls),
@@ -104,10 +115,11 @@ class HiveCore:
             "messages": bus.audit_log, "integration": integrated, "final_output": final_output,
             "phase_timings": phase_timings, "execution_status": execution_status,
             "failed_agents": failed_agents, "shared_research_error": shared_research_error,
-            "synthesis_error": synthesis_error}
+            "synthesis_error": synthesis_error, "run_budget": budget_snapshot}
         path = save_run(self.output_dir, run_id, payload)
         logger.info("Run %s saved to %s in %.1fs", run_id, path, duration)
         return {"run_id": run_id, "result_path": str(path), "metadata": metadata,
             "agent_results": results, "final_output": final_output, "phase_timings": phase_timings,
             "execution_status": execution_status, "failed_agents": failed_agents,
-            "shared_research_error": shared_research_error, "synthesis_error": synthesis_error}
+            "shared_research_error": shared_research_error, "synthesis_error": synthesis_error,
+            "run_budget": budget_snapshot}

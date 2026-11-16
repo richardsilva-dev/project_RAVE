@@ -2,7 +2,7 @@
 
 Protótipo experimental de inteligência coletiva com três agentes especializados, coordenação híbrida e comparação com um agente individual.
 
-> Status: primeira implementação em construção e ainda não validada em execução real. A hipótese de superioridade da colmeia permanece aberta.
+> Status: implementação experimental. A hipótese de superioridade da colmeia permanece aberta; esta branch acrescenta guardas locais de orçamento e ainda precisa passar pelos testes locais e por uma execução piloto controlada.
 
 ## Escopo implementado
 
@@ -10,13 +10,11 @@ Protótipo experimental de inteligência coletiva com três agentes especializad
 - Hive Core com coordenação global e integração em camadas.
 - Comunicação direta entre agentes, com barreira de publicação e registro das mensagens.
 - Uma etapa de integração cruzada após a investigação inicial.
-- Baseline de agente único e persistência JSON dos resultados.
-- Testes automatizados dos contratos iniciais e da comunicação.
-- Registro experimental por chamada, com modelo, finalidade, tokens, duração e tentativas; execuções parciais/inválidas são identificadas explicitamente.
-- Baseline individual com pesquisa compartilhada, mesmo modelo de raciocínio e contrato de saída do Hive. Um orçamento global igual ainda precisa ser definido antes de comparar eficiência.
-- Protocolo de confiabilidade informacional e rastreabilidade em `docs/PROTOCOLO_CONFIABILIDADE.md`.
+- Pesquisa web compartilhada; falha na pesquisa compartilhada agora interrompe a execução, sem fallback silencioso para pesquisas individuais.
+- Registro por chamada, tokens, duração, tentativas, custo estimado e snapshot do orçamento global.
+- Limites globais de tokens, buscas, chamadas de modelo (incluindo retries), tempo e custo estimado.
 
-## Requisitos e instalação
+## Instalação
 
 Python 3.11 ou superior.
 
@@ -27,24 +25,21 @@ pip install -e .[dev]
 cp .env.example .env
 ```
 
-Preencha `RAVE_API_KEY` no arquivo `.env`. O aplicativo carrega esse arquivo ao iniciar. O endpoint, o modelo e os limites também podem ser alterados nele.
+Preencha `RAVE_API_KEY` e as duas variáveis de preço do GPT-5 Search API no arquivo `.env`. Não versione esse arquivo.
+
+## Orçamento do piloto
+
+Os limites iniciais são 80.000 tokens, 3 tentativas de pesquisa, 12 chamadas de modelo, 180 segundos e US$ 0,50 estimados por execução. O limite de buscas/chamadas conta retries. As reservas são feitas antes da chamada de rede. Para pesquisa hospedada, o cálculo reserva 16.384 tokens adicionais de contexto, além do texto local e do máximo de saída.
+
+A tabela pública da OpenAI não apresenta uma linha de tarifa de tokens específica para GPT-5 Search API. Por isso, as variáveis `RAVE_SEARCH_INPUT_USD_PER_1M` e `RAVE_SEARCH_OUTPUT_USD_PER_1M` são obrigatórias e precisam ser preenchidas com os valores aplicáveis no painel de cobrança. Se usar tarifa de outro modelo como aproximação, registre isso como hipótese, não como tarifa confirmada. O cálculo local não é um teto de cobrança do provedor; mantenha também um limite de gastos no projeto OpenAI.
 
 ## Execução
 
 ```bash
-rave single "Pergunta a investigar"
 rave hive "Pergunta a investigar"
 pytest
 ```
 
-Os resultados são salvos como JSON em `data/runs/`. O cliente usa endpoint compatível com OpenAI Chat Completions. As investigações usam o modelo de pesquisa `gpt-5-search-api`; as fontes citadas são registradas para auditoria. Verifique fontes e referências antes de pontuar os resultados.
+Os resultados são salvos como JSON em `data/runs/`, incluindo `run_budget` com limites, consumo, reservas e saldo estimado. Uma execução que falhe na pesquisa compartilhada não continua para os agentes. Execuções parciais ou falhas não são resultados comparáveis completos.
 
 Consulte `docs/ARCHITECTURE.md` e `docs/EXPERIMENT.md` antes de interpretar os outputs.
-
-## Pesquisa web
-
-O Hive faz uma pesquisa web compartilhada pela OpenAI via Chat Completions e `gpt-5-search-api`. Os três agentes analisam o conjunto citado em suas especialidades, compartilham descobertas e passam pela síntese final. Essa abordagem reduz chamadas repetidas e respeita limites de taxa mais baixos. As citações são guardadas nos resultados para auditoria. Para desativar, defina `RAVE_WEB_SEARCH=false` no `.env`. A pesquisa requer `RAVE_BASE_URL=https://api.openai.com/v1`; endpoints compatíveis podem ser usados com pesquisa desativada. Confira se cada fonte sustenta a afirmação associada.
-
-## Limite de requisições
-
-`RAVE_MAX_CONCURRENT_REQUESTS` controla quantas chamadas à API podem ocorrer ao mesmo tempo. O padrão é `1` para reduzir rajadas que podem atingir limites do provedor; aumente somente se os limites do projeto permitirem.

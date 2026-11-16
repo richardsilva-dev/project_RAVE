@@ -1,35 +1,31 @@
 # Estado da implementação — RAVE Hive Core
 
-Atualizado em 12/11/2026. Este documento separa o que foi observado em execuções anteriores do que está implementado no código atual. As alterações recentes de instrumentação e baseline ainda não foram executadas contra o provedor.
+Atualizado em 13/11/2026. Esta branch experimental é separada da branch de produção. As alterações abaixo foram escritas no GitHub, mas ainda precisam de execução dos testes locais e de uma pesquisa real limitada antes de serem consideradas verificadas.
 
-## Implementado no código atual
+## Implementado nesta branch
 
-- Três agentes especializados e fixos, com comunicação direta, auditoria e barreira de publicação.
-- Pesquisa web compartilhada, análise especializada, integração entre pares e síntese final.
-- Evidência por afirmação, estados `SUPPORTED`, `REFUTED`, `INSUFFICIENT`, `CONFLICTING` e `OUTDATED`, preservação de origem e tratamento do conteúdo recuperado como dado não confiável.
-- Registro por chamada de modelo, finalidade, modelo, tokens de entrada/saída, duração e tentativas HTTP; totais da execução Hive incluem busca compartilhada, análises, reparos, refinamentos e síntese bem-sucedidos.
-- Preservação das descobertas iniciais, mensagens recebidas, achados descartados e mudanças de refinamento, com razões quando fornecidas pelo modelo.
-- Classificação do estado de execução como completa, parcial ou inválida. Uma execução parcial é salva explicitamente como `PARTIAL`, com falhas identificadas por agente; sem agentes concluídos, não é produzida uma síntese factual.
-- Baseline individual atualizado para usar a mesma consulta de pesquisa compartilhada, modelo de raciocínio configurado e contrato JSON com validação/reparo; chamadas e tokens também são registrados.
-- Validação estrutural dos campos e tipos dos resultados de agentes antes da integração, sem dependência adicional.
+- Três agentes especializados, comunicação direta, auditoria e integração em camadas.
+- Pesquisa web compartilhada e síntese final.
+- Guardião global de orçamento por execução, com reservas antes de cada tentativa de rede.
+- Limites para tokens, buscas, chamadas de modelo (incluindo retries), tempo e custo estimado.
+- Reserva conservadora de 16.384 tokens para contexto de pesquisa hospedada, além do prompt local e do máximo de saída.
+- Reconciliação com tokens reportados pelo provedor e registro de custo estimado.
+- Snapshot `run_budget` salvo no artefato da execução.
+- Falha na pesquisa compartilhada agora interrompe o fluxo; os agentes não iniciam pesquisas individuais como fallback.
+- Conteúdo recuperado continua tratado como evidência não confiável.
 
-## Evidência de execução anterior
+## Limitações
 
-O relatório [RELATORIO_EXECUCAO_2026-11-11.md](RELATORIO_EXECUCAO_2026-11-11.md) registra 15 testes aprovados naquela revisão e uma execução real integrada válida, `rave-86b64f402cfd`, persistida em `data/runs/rave-86b64f402cfd.json`. Isso documenta o estado anterior à instrumentação atual; não é validação das mudanças listadas acima.
+- A tarifa de tokens específica de GPT-5 Search API não aparece como linha separada na tabela pública de preços. As variáveis de preço precisam ser configuradas explicitamente e sua origem documentada.
+- O limite de saída de análise por agente é 4.096 tokens; a síntese final tem limite separado de 8.192 tokens. Ambos consomem o mesmo orçamento global da execução.
+- O limite de US$ 0,50 é estimado localmente, não imposto pelo provedor. O contexto interno de busca é variável. Configure um limite de gastos separado no OpenAI Platform.
+- Validação offline no GitHub Actions concluída: 26 testes aprovados no commit `3b7a231515b63fa8caa4d8a4cbabc68d589b2a8b` (run `43922045558`). Nenhuma chamada de pesquisa paga foi realizada.
+- Esta branch não altera `main`; ela deve ser testada antes de qualquer merge.
+- Comparação B permanece bloqueada pelas pendências de segurança documentadas no laboratório.
 
-O experimento anterior concluiu com três agentes, 18 achados, 36 mensagens e 200,55 segundos. Não houve baseline individual pareado, mesma pergunta/fontes/condições, nem bateria comparativa. Portanto, não demonstra superioridade coletiva ou economia de recursos.
+## Próxima validação
 
-## Limitações e validações pendentes
-
-- As alterações recentes ainda precisam de validação automatizada e de uma execução real.
-- A correção do registro por chamada só poderá ser confirmada com uma nova execução; a execução histórica não guardou duração/modelo/finalidade de cada chamada.
-- O baseline agora compartilha pesquisa, modelo de raciocínio e contrato, mas não existe ainda orçamento global de tokens rigorosamente igualado entre uma chamada individual e as várias chamadas Hive. Comparações de qualidade são mais controladas; comparações de eficiência ainda exigem protocolo de orçamento definido.
-- Não foram realizados Evaluation Lab, avaliação independente, agente externo de referência ou comparação estatística.
-- Estados de evidência são assistidos por modelo, não uma verificação semântica independente. Independência entre fontes e suporte real de trechos ainda precisam de auditoria.
-
-## Próximos passos
-
-1. Executar os testes automatizados e corrigir regressões.
-2. Fazer uma execução Hive e uma baseline com pergunta e escopo idênticos; inspecionar chamadas, tokens, duração, estados de execução e rastreabilidade.
-3. Definir orçamento global comparável e rubricar qualidade antes da bateria experimental.
-4. Planejar avaliações independentes e estatísticas para responder se a colmeia melhora a qualidade, acrescenta informação por cooperação e a que custo/latência.
+1. Confirmar que a chave local é válida com a verificação não faturável `GET /models` do executor do laboratório.
+2. Fazer uma única execução Hive com a pergunta e o escopo preservados da Comparação A.
+3. Verificar `execution_status`, `run_budget`, tokens, custo estimado, chamadas, retries, duração e arquivos persistidos.
+4. Só depois avaliar os outputs e decidir se a comparação é elegível.
