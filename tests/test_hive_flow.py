@@ -14,7 +14,7 @@ class ResearchClient:
         self.search_calls = 0
         self.analyzed_agents = []
 
-    def complete(self, system, user, *, web_search=False):
+    def complete(self, system, user, *, web_search=False, max_completion_tokens=None):
         if system.startswith("You are the RAVE Hive Core synthesis component."):
             return LLMResponse(json.dumps({"executive_answer": "Integrated answer"}),
                 {"prompt_tokens": 5, "completion_tokens": 3})
