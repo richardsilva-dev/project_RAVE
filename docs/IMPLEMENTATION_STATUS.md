@@ -34,3 +34,19 @@ Os tokens e a latência descrevem esta rodada e incluem fatores de reparo JSON e
 1. Fazer comparações pareadas em várias perguntas e avaliações cegas com rubrica publicada antes das execuções.
 2. Auditar manualmente origem, conteúdo, atualidade e suporte de uma amostra de afirmações e referências.
 3. Definir e aplicar um orçamento de tokens/custo comparável antes de afirmar vantagem de eficiência.
+
+
+## Benchmark candidate — current Hive architecture
+
+- Candidate branch: `benchmark-a-current-hive-budget-guard`
+- Base/frozen reference: `independent_research` at `d5a7b2397bc50796ab83ee22ed326fdc087b84b2`
+- Candidate code commit: `ee45023a64f637e80095e08c4aab56f97d6cc835`
+- GitHub Actions run `43923968510`: **40 tests passed** on Python 3.11.
+- Preserves the current three-specialist Hive, peer refinement, evidence provenance, partial-run handling, independent/shared research modes, single-agent command and shared-research reuse.
+- Adds a thread-safe run-wide budget: 80,000 tokens, 3 search attempts, 12 model-call attempts, 180 seconds and USD 0.50 estimated-cost ceiling.
+- Search input reservation: 16,384 tokens. Agent analysis output: 4,096 tokens per call. Final synthesis output: 8,192 tokens. Retries are counted as separate attempts.
+- Authenticated HTTP redirects are refused; definitive 401/403 failures release the reservation; transient failures retain reservations conservatively.
+- Specialist output is bounded to 3 findings per agent, 3 evidence items per finding, 120 summary words and 250 characters per evidence excerpt. Synthesis validates required fields and performs one budgeted JSON-format repair when needed.
+- No live API request has been made. The search token rates remain explicit local configuration and must be checked against the applicable billing record.
+
+This branch is a candidate derived from the frozen research implementation. It is not merged into `independent_research` or `main`; use the exact candidate commit above for the lab pilot. A live run is eligible only when its saved `execution_status` is `COMPLETED` and its final answer is non-empty.
