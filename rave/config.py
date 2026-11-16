@@ -28,7 +28,7 @@ class Settings:
     max_concurrent_requests: int = 1
     web_search_context_size: str = "low"
     web_search_max_output_tokens: int = 512
-    analysis_max_output_tokens: int = 4096
+    analysis_max_output_tokens: int = 8192
     synthesis_max_output_tokens: int = 8192
 
     @classmethod
@@ -39,7 +39,7 @@ class Settings:
             timeout = int(os.getenv("RAVE_TIMEOUT_SECONDS", "90"))
             max_concurrent = int(os.getenv("RAVE_MAX_CONCURRENT_REQUESTS", "1"))
             web_search_max_output = int(os.getenv("RAVE_WEB_SEARCH_MAX_OUTPUT_TOKENS", "512"))
-            analysis_max_output = int(os.getenv("RAVE_ANALYSIS_MAX_OUTPUT_TOKENS", "4096"))
+            analysis_max_output = int(os.getenv("RAVE_ANALYSIS_MAX_OUTPUT_TOKENS", "8192"))
             synthesis_max_output = int(os.getenv("RAVE_SYNTHESIS_MAX_OUTPUT_TOKENS", "8192"))
         except ValueError as exc:
             raise ValueError("RAVE_TEMPERATURE must be numeric and token/time limits integers") from exc
