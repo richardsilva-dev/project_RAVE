@@ -39,6 +39,10 @@ async def synthesize(client: ChatCompletionsClient, question: str, integrated: d
             not isinstance(value.get(key), kind) for key, kind in required_types.items()
         ):
             raise ValueError("synthesis_output_schema_invalid")
+        if not value["executive_answer"].strip():
+            raise ValueError("synthesis_executive_answer_empty")
+        if any(not isinstance(item, dict) for item in value["evidence_and_sources"]):
+            raise ValueError("synthesis_evidence_schema_invalid")
         if any(not isinstance(item, str) for item in value["gaps_and_limitations"]):
             raise ValueError("synthesis_limitations_schema_invalid")
         return value
