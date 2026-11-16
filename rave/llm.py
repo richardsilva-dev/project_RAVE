@@ -3,6 +3,7 @@ import re
 import logging
 import time
 import contextvars
+import http.client
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -11,23 +12,48 @@ from datetime import datetime, timezone
 from threading import BoundedSemaphore
 from typing import Any
 from .config import Settings
+from .budget import RunBudget
 
 logger = logging.getLogger(__name__)
+
+
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    handler_order = 100
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _open_url(request, timeout):
+    opener = urllib.request.build_opener(_NoRedirectHandler())
+    return opener.open(request, timeout=timeout)
+
+
+_active_run_budget: contextvars.ContextVar[RunBudget | None] = contextvars.ContextVar("rave_run_budget", default=None)
 _active_call_log: contextvars.ContextVar[list[dict[str, Any]] | None] = contextvars.ContextVar("rave_call_log", default=None)
 _active_agent_id: contextvars.ContextVar[str | None] = contextvars.ContextVar("rave_agent_id", default=None)
 
 class capture_llm_calls:
-    """Isolate API call telemetry to one async run (also inherited by to_thread)."""
+    """Isolate API telemetry and the shared run budget to one async run."""
+    def __init__(self, budget: RunBudget | None = None):
+        self.budget = budget
+
     def __enter__(self):
         self.calls: list[dict[str, Any]] = []
         self.token = _active_call_log.set(self.calls)
+        self.budget_token = _active_run_budget.set(self.budget)
         return self.calls
 
     def __exit__(self, *_):
         _active_call_log.reset(self.token)
+        _active_run_budget.reset(self.budget_token)
 
 def current_llm_calls() -> list[dict[str, Any]]:
     return _active_call_log.get() or []
+
+
+def current_run_budget() -> RunBudget | None:
+    return _active_run_budget.get()
 
 class llm_agent_context:
     """Attach a stable agent/component id to calls made in this async context."""
@@ -53,7 +79,7 @@ class ChatCompletionsClient:
         self.settings = settings
         self._request_semaphore = BoundedSemaphore(settings.max_concurrent_requests)
 
-    def complete(self, system: str, user: str, *, web_search: bool = False) -> LLMResponse:
+    def complete(self, system: str, user: str, *, web_search: bool = False, max_completion_tokens: int | None = None) -> LLMResponse:
         call_started = time.perf_counter()
         attempts = 0
         if not self.settings.api_key:
@@ -73,7 +99,9 @@ class ChatCompletionsClient:
             endpoint = f"{self.settings.base_url}/chat/completions"
         else:
             payload = {"model": self.settings.model, "temperature": self.settings.temperature,
-                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                "max_completion_tokens": (self.settings.analysis_max_output_tokens
+                    if max_completion_tokens is None else max_completion_tokens)}
             endpoint = f"{self.settings.base_url}/chat/completions"
         request = urllib.request.Request(endpoint,
             data=json.dumps(payload).encode("utf-8"),
@@ -82,8 +110,15 @@ class ChatCompletionsClient:
         with self._request_semaphore:
             for attempt in range(3):
                 attempts += 1
+                reservation = None
+                budget = current_run_budget()
                 try:
-                    with urllib.request.urlopen(request, timeout=self.settings.timeout_seconds) as response:
+                    timeout = self.settings.timeout_seconds
+                    if budget is not None:
+                        reservation = budget.reserve(payload["model"], system, user,
+                            payload["max_completion_tokens"], web_search)
+                        timeout = min(timeout, max(0.001, budget.snapshot()["remaining"]["seconds"]))
+                    with _open_url(request, timeout=timeout) as response:
                         try:
                             body: dict[str, Any] = json.loads(response.read().decode("utf-8"))
                         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
