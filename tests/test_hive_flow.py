@@ -14,9 +14,10 @@ class ResearchClient:
         self.search_calls = 0
         self.analyzed_agents = []
 
-    def complete(self, system, user, *, web_search=False):
+    def complete(self, system, user, *, web_search=False, max_completion_tokens=None):
         if system.startswith("You are the RAVE Hive Core synthesis component."):
-            return LLMResponse(json.dumps({"executive_answer": "Integrated answer"}),
+            return LLMResponse(json.dumps({"executive_answer": "Integrated answer", "integrated_analysis": "",
+                "collective_integration": "", "evidence_and_sources": [], "gaps_and_limitations": [], "conclusions": ""}),
                 {"prompt_tokens": 5, "completion_tokens": 3})
         if system.startswith("You are the RAVE Hive Core shared web research component."):
             self.search_calls += 1
@@ -49,7 +50,9 @@ class ResearchClient:
         raise AssertionError("Unexpected LLM request")
 
 
-def test_three_agents_search_share_and_synthesize(tmp_path):
+def test_three_agents_search_share_and_synthesize(tmp_path, monkeypatch):
+    monkeypatch.setenv("RAVE_SEARCH_INPUT_USD_PER_1M", "1.25")
+    monkeypatch.setenv("RAVE_SEARCH_OUTPUT_USD_PER_1M", "10.0")
     client = ResearchClient()
     result = asyncio.run(HiveCore(client, str(tmp_path)).run("Small research question", "Keep it concise"))
 
@@ -65,9 +68,11 @@ def test_three_agents_search_share_and_synthesize(tmp_path):
     assert len(result["final_output"]["web_sources"]) == 2
 
 
-def test_shared_search_failure_does_not_silently_switch_to_independent(tmp_path):
+def test_shared_search_failure_does_not_silently_switch_to_independent(tmp_path, monkeypatch):
+    monkeypatch.setenv("RAVE_SEARCH_INPUT_USD_PER_1M", "1.25")
+    monkeypatch.setenv("RAVE_SEARCH_OUTPUT_USD_PER_1M", "10.0")
     class FailedSharedSearchClient(ResearchClient):
-        def complete(self, system, user, *, web_search=False):
+        def complete(self, system, user, *, web_search=False, max_completion_tokens=None):
             if system.startswith("You are the RAVE Hive Core shared web research component."):
                 raise TimeoutError("simulated shared-search timeout")
             raise AssertionError("Agents or synthesis must not run after the shared search fails")
