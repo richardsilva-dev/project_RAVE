@@ -94,10 +94,12 @@ class ChatCompletionsClient:
                 reservation = None
                 budget = current_run_budget()
                 try:
+                    timeout = self.settings.timeout_seconds
                     if budget is not None:
                         reservation = budget.reserve(payload["model"], system, user,
                             payload["max_completion_tokens"], web_search)
-                    with _open_url(request, timeout=self.settings.timeout_seconds) as response:
+                        timeout = min(timeout, max(0.001, budget.snapshot()["remaining"]["seconds"]))
+                    with _open_url(request, timeout=timeout) as response:
                         try:
                             body: dict[str, Any] = json.loads(response.read().decode("utf-8"))
                         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -135,6 +137,8 @@ class ChatCompletionsClient:
                     if request_id and re.fullmatch(r"[A-Za-z0-9_-]{1,80}", request_id):
                         details.append(f"request_id={request_id}")
                     suffix = f" ({', '.join(details)})" if details else ""
+                    if exc.code in {401, 403} and budget is not None and reservation is not None:
+                        budget.release_reservation(reservation)
                     self._record_call(system, user, web_search, call_started, attempts,
                         {"prompt_tokens": 0, "completion_tokens": 0}, "FAILED")
                     raise RuntimeError(f"LLM provider returned HTTP {exc.code}{suffix}") from exc
