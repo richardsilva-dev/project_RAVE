@@ -55,3 +55,22 @@ def test_unknown_model_is_blocked():
     budget = make_budget()
     with pytest.raises(RunBudgetExceeded, match="no_price_configured_for_model"):
         budget.reserve("unknown-model", "system", "question", 100, False)
+
+
+def test_input_reservation_estimates_tokens_instead_of_counting_utf8_bytes():
+    budget = make_budget(max_tokens=1000)
+    system = "a" * 300
+    user = "b" * 300
+    reservation = budget.reserve("gpt-4.1-mini", system, user, 100, False)
+    # 600 UTF-8 bytes / 3, plus the 100-token output reservation.
+    assert reservation[0] == 300
+    assert budget.snapshot()["reserved"]["tokens"] == 300
+
+
+def test_multibyte_prompt_reservation_uses_utf8_byte_based_conservative_estimate():
+    budget = make_budget(max_tokens=1000)
+    system = "ação" * 30
+    user = "pergunta" * 30
+    prompt_bytes = len((system + user).encode("utf-8"))
+    reservation = budget.reserve("gpt-4.1-mini", system, user, 100, False)
+    assert reservation[0] == (prompt_bytes + 2) // 3 + 100
