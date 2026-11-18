@@ -86,3 +86,26 @@ def test_shared_search_failure_does_not_silently_switch_to_independent(tmp_path,
     assert result["shared_research_error"] == "TimeoutError"
     assert len(saved["failed_agents"]) == 3
     assert saved["agent_results"] == []
+
+
+def test_agent_runtime_errors_preserve_safe_diagnostics(tmp_path, monkeypatch):
+    monkeypatch.setenv("RAVE_SEARCH_INPUT_USD_PER_1M", "1.25")
+    monkeypatch.setenv("RAVE_SEARCH_OUTPUT_USD_PER_1M", "10.0")
+
+    class FailedAgentClient(ResearchClient):
+        def complete(self, system, user, *, web_search=False, max_completion_tokens=None):
+            if system.startswith("You are RAVE Agent "):
+                raise RuntimeError("LLM provider returned HTTP 400 (code=invalid_request_error)")
+            return super().complete(system, user, web_search=web_search,
+                max_completion_tokens=max_completion_tokens)
+
+    result = asyncio.run(HiveCore(FailedAgentClient(), str(tmp_path)).run(
+        "Small research question", "Keep it concise"))
+    saved = json.loads(Path(result["result_path"]).read_text(encoding="utf-8"))
+
+    assert result["execution_status"] == "INVALID"
+    assert len(saved["failed_agents"]) == 3
+    assert all(agent["error_type"] == "RuntimeError" for agent in saved["failed_agents"])
+    assert all(agent["error_message"] == (
+        "LLM provider returned HTTP 400 (code=invalid_request_error)")
+        for agent in saved["failed_agents"])
