@@ -30,7 +30,7 @@ def test_reservation_precedes_network_and_usage_reconciles():
 
 
 def test_budget_blocks_token_overrun_before_network():
-    budget = make_budget(max_tokens=100)
+    budget = make_budget(max_tokens=80)
     with pytest.raises(RunBudgetExceeded, match="run_token_budget_reservation_exceeded"):
         budget.reserve("gpt-4.1-mini", "x" * 100, "question", 50, False)
     assert budget.snapshot()["used"]["model_calls"] == 0
