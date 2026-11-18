@@ -62,8 +62,17 @@ class HiveCore:
             outcomes = await asyncio.gather(*(agent.run(task, shared_research)
                 for agent, task in zip(agents, tasks)), return_exceptions=True)
         results = [outcome for outcome in outcomes if not isinstance(outcome, BaseException)]
-        failed_agents = [{"agent_id": agent.agent_id, "error_type": type(outcome).__name__}
-            for agent, outcome in zip(agents, outcomes) if isinstance(outcome, BaseException)]
+        failed_agents = []
+        for agent, outcome in zip(agents, outcomes):
+            if isinstance(outcome, BaseException):
+                failure = {"agent_id": agent.agent_id, "error_type": type(outcome).__name__}
+                # RuntimeError messages from ChatCompletionsClient contain bounded,
+                # credential-free provider diagnostics (HTTP status/code or connection class).
+                if isinstance(outcome, RuntimeError):
+                    failure["error_message"] = str(outcome)[:500]
+                failed_agents.append(failure)
+                logger.warning("Run %s: %s failed (%s): %s", run_id, agent.agent_id,
+                    type(outcome).__name__, failure.get("error_message", "no safe diagnostic available"))
         partial_agents = [{"agent_id": result.agent_id, "refinement_status": result.refinement_status,
             "error_type": result.failure_type}
             for result in results if result.status != "COMPLETED"]
