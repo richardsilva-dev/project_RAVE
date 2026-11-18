@@ -1,7 +1,7 @@
 name: tests
 on:
   push:
-    branches: [main, independent_research, benchmark-a-current-hive-budget-guard, fix/synthesis-context-bounds]
+    branches: [main, independent_research, benchmark-a-current-hive-budget-guard, fix/synthesis-context-bounds, fix/token-reservation-estimation]
   workflow_dispatch:
   pull_request:
     branches: [main, independent_research]
