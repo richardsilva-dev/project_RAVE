@@ -120,7 +120,8 @@ def test_independent_research_failure_is_saved_as_partial(tmp_path, monkeypatch)
     assert result["execution_status"] == "PARTIAL"
     assert saved["execution_status"] == "PARTIAL"
     assert len(saved["agent_results"]) == 2
-    assert saved["failed_agents"] == [{"agent_id": "agent-02", "error_type": "RuntimeError"}]
+    assert saved["failed_agents"] == [{"agent_id": "agent-02", "error_type": "RuntimeError",
+        "error_message": "simulated research failure"}]
     assert any("execução parcial" in item.lower()
         for item in result["final_output"]["gaps_and_limitations"])
 
