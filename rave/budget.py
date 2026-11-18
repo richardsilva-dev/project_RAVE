@@ -85,7 +85,11 @@ class RunBudget:
                 raise RunBudgetExceeded("run_search_budget_exceeded")
             if output_tokens <= 0:
                 raise RunBudgetExceeded("invalid_output_token_reservation")
-            local_input = len((system + user).encode("utf-8"))
+            # UTF-8 byte count is not a token count and can reject valid long prompts
+            # far too early. Use a conservative text estimate; provider-reported usage
+            # remains authoritative and is reconciled in record().
+            prompt_bytes = len((system + user).encode("utf-8"))
+            local_input = (prompt_bytes + 2) // 3
             input_reserve = local_input + (self.search_input_reserve_tokens if web_search else 0)
             token_reserve = input_reserve + output_tokens
             if self.tokens + self.reserved_tokens + token_reserve > self.max_tokens:
