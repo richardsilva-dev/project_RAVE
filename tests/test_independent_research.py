@@ -24,11 +24,12 @@ class IndependentResearchClient:
         self.share_peer_evidence = share_peer_evidence
         self.invalid_refinement_agent = invalid_refinement_agent
 
-    def complete(self, system, user, *, web_search=False):
+    def complete(self, system, user, *, web_search=False, max_completion_tokens=None):
         prompt = json.loads(user)
         self.calls.append({"system": system, "prompt": prompt, "web_search": web_search})
         if system.startswith("You are the RAVE Hive Core synthesis component."):
-            return LLMResponse(json.dumps({"executive_answer": "answer", "evidence_and_sources": []}),
+            return LLMResponse(json.dumps({"executive_answer": "answer", "integrated_analysis": "",
+                "collective_integration": "", "evidence_and_sources": [], "gaps_and_limitations": [], "conclusions": ""}),
                 {"prompt_tokens": 3, "completion_tokens": 2})
         if system.startswith("You repair JSON formatting only"):
             return LLMResponse("not valid json", {"prompt_tokens": 1, "completion_tokens": 1})
@@ -110,7 +111,9 @@ def test_independent_research_separates_search_from_reasoning_and_citation_origi
     asyncio.run(scenario())
 
 
-def test_independent_research_failure_is_saved_as_partial(tmp_path):
+def test_independent_research_failure_is_saved_as_partial(tmp_path, monkeypatch):
+    monkeypatch.setenv("RAVE_SEARCH_INPUT_USD_PER_1M", "1.25")
+    monkeypatch.setenv("RAVE_SEARCH_OUTPUT_USD_PER_1M", "10.0")
     client = IndependentResearchClient(fail_search_role="Mecanismos, relações e explicações")
     result = asyncio.run(HiveCore(client, str(tmp_path)).run("Question?", "Scope"))
     saved = json.loads(Path(result["result_path"]).read_text(encoding="utf-8"))
@@ -122,7 +125,9 @@ def test_independent_research_failure_is_saved_as_partial(tmp_path):
         for item in result["final_output"]["gaps_and_limitations"])
 
 
-def test_refinement_timeout_preserves_initial_findings_and_marks_hive_partial(tmp_path):
+def test_refinement_timeout_preserves_initial_findings_and_marks_hive_partial(tmp_path, monkeypatch):
+    monkeypatch.setenv("RAVE_SEARCH_INPUT_USD_PER_1M", "1.25")
+    monkeypatch.setenv("RAVE_SEARCH_OUTPUT_USD_PER_1M", "10.0")
     client = IndependentResearchClient(fail_refinement_agent="agent-03")
     result = asyncio.run(HiveCore(client, str(tmp_path)).run("Question?", "Scope"))
     saved = json.loads(Path(result["result_path"]).read_text(encoding="utf-8"))
@@ -138,7 +143,9 @@ def test_refinement_timeout_preserves_initial_findings_and_marks_hive_partial(tm
     assert len(saved["integration"]["findings"]) >= 3
 
 
-def test_invalid_refinement_json_is_also_reported_as_partial(tmp_path):
+def test_invalid_refinement_json_is_also_reported_as_partial(tmp_path, monkeypatch):
+    monkeypatch.setenv("RAVE_SEARCH_INPUT_USD_PER_1M", "1.25")
+    monkeypatch.setenv("RAVE_SEARCH_OUTPUT_USD_PER_1M", "10.0")
     client = IndependentResearchClient(invalid_refinement_agent="agent-03")
     result = asyncio.run(HiveCore(client, str(tmp_path)).run("Question?", "Scope"))
     saved = json.loads(Path(result["result_path"]).read_text(encoding="utf-8"))

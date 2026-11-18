@@ -1,9 +1,10 @@
 name: tests
 on:
   push:
-    branches: [main, independent_research]
+    branches: [main, independent_research, benchmark-a-current-hive-budget-guard]
+  workflow_dispatch:
   pull_request:
-    branches: [main]
+    branches: [main, independent_research]
 jobs:
   pytest:
     runs-on: ubuntu-latest
